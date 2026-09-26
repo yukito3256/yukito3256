@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>棒人間アクションゲーム - 必殺技付き</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'M PLUS Rounded 1c', 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 15px;
+        }
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 26px;
+            text-align: center;
+            background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 20px rgba(56, 189, 248, 0.2);
+            border: 2px solid #334155;
+            background-color: #020617;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+        #ui {
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .info-item {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hp-bar-outer {
+            width: 100px;
+            height: 12px;
+            background: #334155;
+            border-radius: 6px;
+            overflow: hidden;
+            display: inline-block;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .hp-bar-inner {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ef4444, #22c55e);
+            transition: width 0.2s ease;
+        }
+        .toolbar {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .copy-btn, .action-btn, .reset-btn {
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            font-size: 15px;
+            font-weight: 800;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+        }
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            filter: brightness(1.1);
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.6);
+        }
+        .copy-btn {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            filter: brightness(1.1);
+        }
+        .reset-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+        }
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            filter: brightness(1.1);
+        }
+        .copy-btn:active, .action-btn:active, .reset-btn:active {
+            transform: translateY(0);
+        }
+        #controls-guide {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px 16px;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+        }
+        kbd {
+            background: #334155;
+            color: #f8fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚔️ 棒人間アクションゲーム - 必殺技付き ⚔️</h1>
+
+    <div id="ui">
+        <div class="info-item">
+            ❤️ 体力 (HP): <span id="hp-text">10</span>/10
+            <div class="hp-bar-outer"><div class="hp-bar-inner" id="hp-bar"></div></div>
+        </div>
+        <div class="info-item">👾 残りの敵: <span id="enemies-display">7</span> 体</div>
+        <div class="info-item" style="color: #facc15;">
+            ⚡ 必殺技 (Q): <span id="special-display" style="color: #4ade80;">READY!</span>
+        </div>
+        <div class="info-item">🏆 Wave: <span id="wave-display">1</span></div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+    </div>
+
+    <div class="toolbar">
+        <button class="action-btn" id="specialBtn" onclick="triggerSpecialMove()">⚡ 必殺技を発動 (Q)</button>
+        <button class="reset-btn" onclick="restartGame()">🔄 ゲームリセット</button>
+        <button class="copy-btn" onclick="copySourceCode()">📋 このゲームのコードをコピー</button>
+    </div>
+
+    <div id="controls-guide">
+        🎮 <b>操作方法:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 通常攻撃 | <kbd>Q</kbd> : 必殺旋風斬り
+    </div>
+
+    <div id="toast">コードをコピーしました！</div>
+
+<script>
+// 音響効果 (Web Audio API Synthesizer)
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+    if (!audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'punch') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'hit') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'special') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.4);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else if (type === 'win') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.setValueAtTime(554.37, now + 0.1);
+            osc.frequency.setValueAtTime(659.25, now + 0.2);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+    } catch (e) {}
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const hpText = document.getElementById('hp-text');
+const hpBar = document.getElementById('hp-bar');
+const enemiesDisplay = document.getElementById('enemies-display');
+const specialDisplay = document.getElementById('special-display');
+const waveDisplay = document.getElementById('wave-display');
+const specialBtn = document.getElementById('specialBtn');
+
+const keys = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+    Space: false,
+    KeyQ: false
+};
+
+window.addEventListener('keydown', (e) => {
+    initAudio();
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = true;
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = true;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = true;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = true;
+    if (e.code === 'Space') {
+        e.preventDefault();
+        keys.Space = true;
+    }
+    if (e.code === 'KeyQ') {
+        keys.KeyQ = true;
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = false;
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = false;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = false;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = false;
+    if (e.code === 'Space') keys.Space = false;
+    if (e.code === 'KeyQ') keys.KeyQ = false;
+});
+
+// パーティクルシステム
+class Particle {
+    constructor(x, y, color, size, speedX, speedY, life) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = size;
+        this.speedX = speedX;
+        this.speedY = speedY;
+        this.life = life;
+        this.maxLife = life;
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.life--;
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// ヒットテキスト
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = 40;
+    }
+    update() {
+        this.y -= 1;
+        this.life--;
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / 40);
+        ctx.fillStyle = this.color;
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText(this.text, this.x - 10, this.y);
+        ctx.restore();
+    }
+}
+
+let particles = [];
+let floatingTexts = [];
+let screenShake = 0;
+
+class Player {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 14;
+        this.speed = 4.5;
+        this.hp = 10;
+        this.maxHp = 10;
+        this.facing = 'right';
+        this.isAttacking = false;
+        this.attackTimer = 0;
+        this.attackHasHit = false;
+        
+        // 必殺技関連
+        this.specialCooldown = 0;
+        this.maxSpecialCooldown = 180; // 3秒 (60fps)
+        this.isSpecialActive = false;
+        this.specialTimer = 0;
+        this.specialAngle = 0;
+        
+        // アニメーション用
+        this.walkCycle = 0;
+    }
+
+    update() {
+        if (this.isSpecialActive) {
+            this.specialTimer--;
+            this.specialAngle += 0.4;
+            
+            // 必殺技エフェクト
+            for (let i = 0; i < 3; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 30 + Math.random() * 50;
+                particles.push(new Particle(
+                    this.x + Math.cos(angle) * dist,
+                    this.y + Math.sin(angle) * dist,
+                    '#f59e0b',
+                    3,
+                    (Math.random() - 0.5) * 2,
+                    (Math.random() - 0.5) * 2,
+                    20
+                ));
+            }
+
+            if (this.specialTimer <= 0) {
+                this.isSpecialActive = false;
+            }
+            return;
+        }
+
+        if (this.specialCooldown > 0) {
+            this.specialCooldown--;
+        }
+
+        let dx = 0;
+        let dy = 0;
+
+        if (keys.ArrowUp) dy -= this.speed;
+        if (keys.ArrowDown) dy += this.speed;
+        if (keys.ArrowLeft) {
+            dx -= this.speed;
+            this.facing = 'left';
+        }
+        if (keys.ArrowRight) {
+            dx += this.speed;
+            this.facing = 'right';
+        }
+
+        if (dx !== 0 || dy !== 0) {
+            this.walkCycle += 0.2;
+        } else {
+            this.walkCycle = 0;
+        }
+
+        this.x += dx;
+        this.y += dy;
+
+        if (this.x < 30) this.x = 30;
+        if (this.x > canvas.width - 30) this.x = canvas.width - 30;
+        if (this.y < 60) this.y = 60;
+        if (this.y > canvas.height - 30) this.y = canvas.height - 30;
+
+        // 通常攻撃
+        if (keys.Space && !this.isAttacking) {
+            this.isAttacking = true;
+            this.attackTimer = 15;
+            this.attackHasHit = false;
+            playSound('punch');
+        }
+
+        if (this.isAttacking) {
+            this.attackTimer--;
+            if (this.attackTimer <= 0) {
+                this.isAttacking = false;
+            }
+        }
+
+        // 必殺技起動
+        if (keys.KeyQ && this.specialCooldown === 0) {
+            this.triggerSpecial();
+        }
+    }
+
+    triggerSpecial() {
+        if (this.specialCooldown > 0 || this.isSpecialActive) return;
+        this.isSpecialActive = true;
+        this.specialTimer = 45; // 0.75秒間旋風
+        this.specialCooldown = this.maxSpecialCooldown;
+        this.specialAngle = 0;
+        screenShake = 10;
+        playSound('special');
+        floatingTexts.push(new FloatingText(this.x, this.y - 40, '必殺旋風斬り!!', '#f59e0b'));
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 必殺技発動中のグラフィックオーラ
+        if (this.isSpecialActive) {
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, 70, this.specialAngle, this.specialAngle + Math.PI * 1.5);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(0, 0, 50, -this.specialAngle, -this.specialAngle + Math.PI);
+            ctx.stroke();
+        }
+
+        const isLeft = this.facing === 'left';
+        const dir = isLeft ? -1 : 1;
+        const legAngle = Math.sin(this.walkCycle) * 0.5;
+
+        // 棒人間の描画
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+
+        // 頭部
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(0, -25, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 胴体
+        ctx.beginPath();
+        ctx.moveTo(0, -15);
+        ctx.lineTo(0, 10);
+        ctx.stroke();
+
+        // 脚部
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.lineTo(Math.sin(legAngle) * 12, 28);
+        ctx.moveTo(0, 10);
+        ctx.lineTo(-Math.sin(legAngle) * 12, 28);
+        ctx.stroke();
+
+        // 腕部 & 攻撃
+        if (this.isAttacking) {
+            // パンチアーム
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.lineTo(dir * 25, -10);
+            ctx.stroke();
+
+            // スラッシュ斬撃エフェクト
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(dir * 15, -10, 25, dir * -0.5, dir * 0.5);
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.lineTo(dir * 12, -2);
+            ctx.moveTo(0, -10);
+            ctx.lineTo(-dir * 10, 0);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+}
+
+class Enemy {
+    constructor(x, y, isBoss = false) {
+        this.x = x;
+        this.y = y;
+        this.isBoss = isBoss;
+        this.hp = isBoss ? 6 : 2;
+        this.maxHp = this.hp;
+        this.speed = isBoss ? 1.8 : 2.2 + Math.random() * 0.8;
+        this.radius = isBoss ? 20 : 12;
+        this.color = isBoss ? '#ef4444' : '#f43f5e';
+        this.facing = 'left';
+        this.attackCooldown = 0;
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dx > 0) this.facing = 'right';
+        else this.facing = 'left';
+
+        if (dist > 25) {
+            this.x += (dx / dist) * this.speed;
+            this.y += (dy / dist) * this.speed;
+        } else {
+            // 近接攻撃
+            if (this.attackCooldown <= 0 && !player.isSpecialActive) {
+                player.hp -= this.isBoss ? 2 : 1;
+                this.attackCooldown = 60; // 1秒間隔
+                screenShake = 6;
+                playSound('hit');
+                floatingTexts.push(new FloatingText(player.x, player.y - 20, '-1', '#ef4444'));
+
+                // 痛みの血飛沫風パーティクル
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(
+                        player.x, player.y,
+                        '#ef4444', 3,
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 4,
+                        15
+                    ));
+                }
+            }
+        }
+
+        if (this.attackCooldown > 0) {
+            this.attackCooldown--;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const dir = this.facing === 'left' ? -1 : 1;
+        const headRadius = this.isBoss ? 14 : 9;
+
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.isBoss ? 5 : 3;
+        ctx.lineCap = 'round';
+
+        // 頭
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, -headRadius * 2, headRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 胴体
+        ctx.beginPath();
+        ctx.moveTo(0, -headRadius);
+        ctx.lineTo(0, headRadius * 1.5);
+        ctx.stroke();
+
+        // 手足
+        ctx.beginPath();
+        ctx.moveTo(0, headRadius * 1.5);
+        ctx.lineTo(dir * 10, headRadius * 3);
+        ctx.moveTo(0, headRadius * 1.5);
+        ctx.lineTo(-dir * 10, headRadius * 3);
+
+        ctx.moveTo(0, 0);
+        ctx.lineTo(dir * 14, headRadius);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-dir * 10, headRadius);
+        ctx.stroke();
+
+        // ボス用HP表示
+        if (this.isBoss) {
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(-20, -45, 40, 6);
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-20, -45, (this.hp / this.maxHp) * 40, 6);
+        }
+
+        ctx.restore();
+    }
+}
+
+// ゲーム状態管理
+let player = new Player(150, 250);
+let enemies = [];
+let currentWave = 1;
+let totalEnemiesInWave = 7;
+let gameOver = false;
+let gameWon = false;
+
+function spawnWave(wave) {
+    enemies = [];
+    totalEnemiesInWave = 5 + wave * 2;
+    for (let i = 0; i < totalEnemiesInWave; i++) {
+        const isBoss = (wave % 2 === 0 && i === 0);
+        const x = 500 + Math.random() * 260;
+        const y = 80 + Math.random() * 380;
+        enemies.push(new Enemy(x, y, isBoss));
+    }
+}
+
+spawnWave(currentWave);
+
+function updateGame() {
+    if (gameOver || gameWon) return;
+
+    player.update();
+
+    if (screenShake > 0) screenShake--;
+
+    // 必殺技命中チェック
+    if (player.isSpecialActive) {
+        enemies.forEach(enemy => {
+            const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
+            if (dist < 75) {
+                enemy.hp -= 0.15; // 継続大ダメージ
+                enemy.x += (enemy.x - player.x) * 0.1;
+                enemy.y += (enemy.y - player.y) * 0.1;
+                
+                particles.push(new Particle(
+                    enemy.x, enemy.y, '#f59e0b', 3,
+                    (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
+                ));
+            }
+        });
+    }
+
+    // 通常攻撃命中チェック
+    if (player.isAttacking && !player.attackHasHit) {
+        const attackX = player.x + (player.facing === 'right' ? 30 : -30);
+        enemies.forEach(enemy => {
+            const dist = Math.hypot(enemy.x - attackX, enemy.y - player.y);
+            if (dist < 40) {
+                enemy.hp -= 1;
+                enemy.x += (player.facing === 'right' ? 20 : -20);
+                playSound('hit');
+                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-1', '#facc15'));
+                player.attackHasHit = true;
+
+                for (let i = 0; i < 6; i++) {
+                    particles.push(new Particle(
+                        enemy.x, enemy.y, '#facc15', 3,
+                        (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 15
+                    ));
+                }
+            }
+        });
+    }
+
+    // 敵の更新と撃破処理
+    enemies.forEach((enemy, index) => {
+        enemy.update(player);
+        if (enemy.hp <= 0) {
+            // 撃破エフェクト
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(
+                    enemy.x, enemy.y, enemy.color, 4,
+                    (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 25
+                ));
+            }
+            enemies.splice(index, 1);
+        }
+    });
+
+    // 次のWaveチェック
+    if (enemies.length === 0) {
+        currentWave++;
+        if (currentWave > 3) {
+            gameWon = true;
+            playSound('win');
+        } else {
+            playSound('win');
+            floatingTexts.push(new FloatingText(canvas.width / 2, canvas.height / 2, `WAVE ${currentWave} CLEAR!`, '#38bdf8'));
+            spawnWave(currentWave);
+        }
+    }
+
+    if (player.hp <= 0) {
+        player.hp = 0;
+        gameOver = true;
+    }
+
+    // パーティクル更新
+    particles.forEach((p, idx) => {
+        p.update();
+        if (p.life <= 0) particles.splice(idx, 1);
+    });
+
+    floatingTexts.forEach((ft, idx) => {
+        ft.update();
+        if (ft.life <= 0) floatingTexts.splice(idx, 1);
+    });
+
+    // UI更新
+    hpText.innerText = Math.max(0, player.hp);
+    hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
+    enemiesDisplay.innerText = enemies.length;
+    waveDisplay.innerText = currentWave;
+
+    if (player.specialCooldown === 0) {
+        specialDisplay.innerText = 'READY!';
+        specialDisplay.style.color = '#4ade80';
+        specialBtn.disabled = false;
+    } else {
+        const sec = (player.specialCooldown / 60).toFixed(1);
+        specialDisplay.innerText = `冷却中 (${sec}秒)`;
+        specialDisplay.style.color = '#9ca3af';
+        specialBtn.disabled = true;
+    }
+}
+
+function drawGame() {
+    ctx.save();
+
+    // 画面シェイク
+    if (screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // グリッド背景模様
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+    }
+
+    // ゲームオブジェクトの描画
+    player.draw(ctx);
+    enemies.forEach(enemy => enemy.draw(ctx));
+    particles.forEach(p => p.draw(ctx));
+    floatingTexts.forEach(ft => ft.draw(ctx));
+
+    // オーバーレイ画面（ゲームオーバー/クリア）
+    if (gameOver) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#ef4444';
+        ctx.font = '800 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('「ゲームリセット」ボタンで再挑戦できます', canvas.width / 2, canvas.height / 2 + 30);
+    } else if (gameWon) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#facc15';
+        ctx.font = '800 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VICTORY!! 全WAVEクリア!', canvas.width / 2, canvas.height / 2 - 20);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '20px sans-serif';
+        ctx.fillText('お見事です！最高の棒人間マスター！', canvas.width / 2, canvas.height / 2 + 30);
+    }
+
+    ctx.restore();
+}
+
+function gameLoop() {
+    updateGame();
+    drawGame();
+    requestAnimationFrame(gameLoop);
+}
+
+function triggerSpecialMove() {
+    initAudio();
+    player.triggerSpecial();
+}
+
+function restartGame() {
+    initAudio();
+    player = new Player(150, 250);
+    currentWave = 1;
+    gameOver = false;
+    gameWon = false;
+    particles = [];
+    floatingTexts = [];
+    spawnWave(currentWave);
+}
+
+function copySourceCode() {
+    const htmlCode = document.documentElement.outerHTML;
+    navigator.clipboard.writeText(htmlCode).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2500);
+    }).catch(err => {
+        alert('コピーに失敗しました: ' + err);
+    });
+}
+
+// ゲームループ開始
+gameLoop();
+</script>
+</body>
+</html>
