@@ -430,7 +430,7 @@ class AxeProjectile {
         this.radius = 24;
         this.angle = 0;
         this.life = 65;
-        this.damage = 7;
+        this.damage = 12;
         this.hitEnemies = new Set();
     }
     update(enemies) {
@@ -590,7 +590,6 @@ class Player {
                 const dir = this.facing === 'right' ? 1 : -1;
                 const beamY = this.y - 10;
                 
-                // ビームの光子パーティクル
                 for (let i = 0; i < 6; i++) {
                     const bx = this.x + dir * (Math.random() * canvas.width);
                     const by = beamY + (Math.random() - 0.5) * 50;
@@ -602,12 +601,11 @@ class Player {
                     ));
                 }
 
-                // ビーム範囲内の敵へ継続ダメージ
                 enemies.forEach(enemy => {
                     const inRange = dir === 1 ? enemy.x >= this.x : enemy.x <= this.x;
                     if (inRange && Math.abs(enemy.y - beamY) < 45) {
-                        enemy.hp -= 0.35; // 連続照射大ダメージ
-                        enemy.x += dir * 1.5; // ノックバック
+                        enemy.hp -= 0.6; // 強力なビーム継続ダメージ
+                        enemy.x += dir * 1.5;
                         particles.push(new Particle(
                             enemy.x, enemy.y, '#a855f7', 4,
                             (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
@@ -683,12 +681,10 @@ class Player {
         playSound('special');
 
         if (this.charConfig.name === 'バーサーカー') {
-            // 【バーサーカー】回転斧投げ
             projectiles.push(new AxeProjectile(this.x, this.y, this.facing));
             floatingTexts.push(new FloatingText(this.x, this.y - 40, '斧投げ撃破!!', '#ef4444'));
         } 
         else if (this.charConfig.name === '疾風忍者') {
-            // 【疾風忍者】反対側へ瞬間移動＆通り道の敵を一閃
             const startX = this.x;
             const startY = this.y;
             const targetX = this.facing === 'right' ? canvas.width - 50 : 50;
@@ -697,8 +693,8 @@ class Player {
             const maxX = Math.max(startX, targetX);
             enemies.forEach(enemy => {
                 if (enemy.x >= minX - 30 && enemy.x <= maxX + 30 && Math.abs(enemy.y - startY) < 70) {
-                    enemy.hp -= 9;
-                    floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-9 瞬身一閃!', '#facc15'));
+                    enemy.hp -= 12; // モブHP10を一撃粉砕できる威力
+                    floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-12 瞬身一閃!', '#facc15'));
                     for (let i = 0; i < 10; i++) {
                         particles.push(new Particle(
                             enemy.x, enemy.y, '#facc15', 4,
@@ -722,7 +718,6 @@ class Player {
             floatingTexts.push(new FloatingText(targetX, startY - 40, '瞬身一閃!!', '#facc15'));
         } 
         else if (this.charConfig.name === 'ガーディアン') {
-            // 【ガーディアン】ダメージは与えず、純粋に大幅回復（+8 HP）
             this.isSpecialActive = true;
             this.specialTimer = 40;
             this.specialAngle = 0;
@@ -730,7 +725,6 @@ class Player {
             floatingTexts.push(new FloatingText(this.x, this.y - 40, '✨ HP+8 聖なる祈り(回復) ✨', '#22c55e'));
         }
         else if (this.charConfig.name === 'ダークマージ') {
-            // 【ダークマージ】極大暗黒ビームを照射！
             this.isSpecialActive = true;
             this.specialTimer = 45;
             this.specialAngle = 0;
@@ -738,7 +732,6 @@ class Player {
             floatingTexts.push(new FloatingText(this.x, this.y - 40, '⚡ 暗黒極大ビーム!! ⚡', '#a855f7'));
         }
         else {
-            // バランス
             this.isSpecialActive = true;
             this.specialTimer = 45;
             this.specialAngle = 0;
@@ -750,7 +743,6 @@ class Player {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // 【ダークマージ】極大ビームの描画
         if (this.isSpecialActive && this.charConfig.name === 'ダークマージ') {
             const dir = this.facing === 'right' ? 1 : -1;
             const beamLength = canvas.width;
@@ -759,18 +751,15 @@ class Player {
             ctx.shadowColor = '#a855f7';
             ctx.shadowBlur = 25;
 
-            // ビーム外殻
             ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
             ctx.fillRect(0, -25, dir * beamLength, 50);
 
-            // ビーム芯（白・明るい紫）
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.fillRect(0, -10, dir * beamLength, 20);
 
             ctx.restore();
         }
 
-        // 必殺技オーラ (ガーディアン・バランス)
         if (this.isSpecialActive && this.charConfig.name !== 'ダークマージ') {
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 5;
@@ -789,25 +778,21 @@ class Player {
         const dir = isLeft ? -1 : 1;
         const legAngle = Math.sin(this.walkCycle) * 0.5;
 
-        // 棒人間の描画
         ctx.strokeStyle = this.color;
         ctx.lineWidth = 4;
         ctx.lineCap = 'round';
 
-        // 頭部
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(0, -25, 10, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
-        // 胴体
         ctx.beginPath();
         ctx.moveTo(0, -15);
         ctx.lineTo(0, 10);
         ctx.stroke();
 
-        // 脚部
         ctx.beginPath();
         ctx.moveTo(0, 10);
         ctx.lineTo(Math.sin(legAngle) * 12, 28);
@@ -815,7 +800,6 @@ class Player {
         ctx.lineTo(-Math.sin(legAngle) * 12, 28);
         ctx.stroke();
 
-        // 腕部 & 攻撃
         if (this.isAttacking) {
             ctx.beginPath();
             ctx.moveTo(0, -10);
@@ -845,7 +829,8 @@ class Enemy {
         this.x = x;
         this.y = y;
         this.isBoss = isBoss;
-        this.hp = isBoss ? 8 : 2;
+        // モブHP = 10, ボスHP = 20
+        this.hp = isBoss ? 20 : 10;
         this.maxHp = this.hp;
         this.speed = isBoss ? 1.8 : 2.2 + Math.random() * 0.8;
         this.radius = isBoss ? 20 : 12;
@@ -923,12 +908,15 @@ class Enemy {
         ctx.lineTo(-dir * 10, headRadius);
         ctx.stroke();
 
-        if (this.isBoss) {
-            ctx.fillStyle = 'rgba(0,0,0,0.5)';
-            ctx.fillRect(-20, -45, 40, 6);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(-20, -45, (this.hp / this.maxHp) * 40, 6);
-        }
+        // 頭上のHPゲージ表示（モブ＆ボス両対応）
+        const barWidth = this.isBoss ? 44 : 26;
+        const barHeight = this.isBoss ? 6 : 4;
+        const barY = this.isBoss ? -45 : -26;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(-barWidth / 2, barY, barWidth, barHeight);
+        ctx.fillStyle = this.isBoss ? '#ef4444' : '#22c55e';
+        ctx.fillRect(-barWidth / 2, barY, (Math.max(0, this.hp) / this.maxHp) * barWidth, barHeight);
 
         ctx.restore();
     }
@@ -974,7 +962,7 @@ function updateGame() {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
             if (dist < 80) {
-                enemy.hp -= 0.2;
+                enemy.hp -= 0.4;
                 enemy.x += (enemy.x - player.x) * 0.1;
                 enemy.y += (enemy.y - player.y) * 0.1;
                 
@@ -992,7 +980,7 @@ function updateGame() {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - attackX, enemy.y - player.y);
             if (dist < 40) {
-                const damage = player.charConfig.name === 'バーサーカー' ? 2 : 1;
+                const damage = player.charConfig.name === 'バーサーカー' ? 4 : 2;
                 enemy.hp -= damage;
                 enemy.x += (player.facing === 'right' ? 20 : -20);
                 playSound('hit');
