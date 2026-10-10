@@ -32,7 +32,7 @@
             justify-content: center;
         }
         h1 {
-            margin: 0 0 8px 0;
+            margin: 0 0 6px 0;
             font-size: 24px;
             text-align: center;
             background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
@@ -43,7 +43,7 @@
         #char-select-container {
             display: flex;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -51,11 +51,11 @@
             background: rgba(30, 41, 59, 0.8);
             border: 2px solid #334155;
             border-radius: 12px;
-            padding: 6px 12px;
+            padding: 5px 10px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
-            min-width: 110px;
+            min-width: 105px;
         }
         .char-card:hover {
             transform: translateY(-2px);
@@ -69,11 +69,11 @@
         }
         .char-name {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 2px;
         }
         .char-desc {
-            font-size: 10px;
+            font-size: 9px;
             color: #94a3b8;
         }
 
@@ -90,18 +90,18 @@
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
         #ui {
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-size: 13px;
             font-weight: bold;
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
         }
         .info-item {
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(8px);
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 20px;
             border: 1px solid #334155;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -110,7 +110,7 @@
             gap: 6px;
         }
         .hp-bar-outer {
-            width: 90px;
+            width: 80px;
             height: 10px;
             background: #334155;
             border-radius: 5px;
@@ -126,18 +126,18 @@
             transition: width 0.2s ease;
         }
         .toolbar {
-            margin-top: 10px;
+            margin-top: 8px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
         }
-        .copy-btn, .action-btn, .reset-btn, .fullscreen-btn {
+        .copy-btn, .action-btn, .reset-btn, .fullscreen-btn, .ultimate-btn {
             color: white;
             border: none;
-            padding: 10px 18px;
-            font-size: 14px;
+            padding: 8px 16px;
+            font-size: 13px;
             font-weight: 800;
             border-radius: 30px;
             cursor: pointer;
@@ -152,12 +152,16 @@
             background: linear-gradient(135deg, #f59e0b, #ef4444);
             border: 1px solid rgba(245, 158, 11, 0.5);
         }
-        .action-btn:hover:not(:disabled) {
+        .ultimate-btn {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            border: 1px solid rgba(236, 72, 153, 0.5);
+        }
+        .ultimate-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5);
             filter: brightness(1.1);
         }
-        .action-btn:disabled {
+        .ultimate-btn:disabled, .action-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             filter: grayscale(0.6);
@@ -189,15 +193,15 @@
             box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
             filter: brightness(1.1);
         }
-        .copy-btn:active, .action-btn:active, .reset-btn:active, .fullscreen-btn:active {
+        .copy-btn:active, .action-btn:active, .reset-btn:active, .fullscreen-btn:active, .ultimate-btn:active {
             transform: translateY(0);
         }
         #controls-guide {
-            margin-top: 8px;
-            font-size: 12px;
+            margin-top: 6px;
+            font-size: 11px;
             color: #94a3b8;
             background: rgba(15, 23, 42, 0.6);
-            padding: 4px 14px;
+            padding: 4px 12px;
             border-radius: 12px;
             border: 1px solid #1e293b;
         }
@@ -208,7 +212,7 @@
             border-radius: 4px;
             border: 1px solid #475569;
             font-family: inherit;
-            font-size: 11px;
+            font-size: 10px;
         }
         #toast {
             position: fixed;
@@ -251,7 +255,7 @@
         </div>
         <div class="char-card" onclick="selectCharacter(3)">
             <div class="char-name" style="color: #22c55e;">🟢 聖騎士ガーディアン</div>
-            <div class="char-desc">HP:20 / 聖なる祈り(純粋回復)</div>
+            <div class="char-desc">HP:20 / 聖なる祈り(回復)</div>
         </div>
         <div class="char-card" onclick="selectCharacter(4)">
             <div class="char-name" style="color: #a855f7;">🟣 大魔導士ダークマージ</div>
@@ -268,6 +272,9 @@
         <div class="info-item" style="color: #facc15;">
             ⚡ 必殺技 (Q): <span id="special-display" style="color: #4ade80;">READY!</span>
         </div>
+        <div class="info-item" style="color: #ec4899;">
+            💥 全画面瞬殺 (E): <span id="ultimate-display">0/15</span>
+        </div>
         <div class="info-item">🏆 Wave: <span id="wave-display">1</span> / 23</div>
     </div>
 
@@ -276,14 +283,15 @@
     </div>
 
     <div class="toolbar">
-        <button class="action-btn" id="specialBtn" onclick="triggerSpecialMove()">⚡ 必殺技を発動 (Q)</button>
-        <button class="reset-btn" onclick="restartGame()">🔄 ゲームリセット</button>
-        <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">🖥️ 画面拡大</button>
-        <button class="copy-btn" onclick="copySourceCode()">📋 このゲームのコードをコピー</button>
+        <button class="action-btn" id="specialBtn" onclick="triggerSpecialMove()">⚡ 必殺技 (Q)</button>
+        <button class="ultimate-btn" id="ultimateBtn" onclick="triggerUltimateMove()">💥 全画面瞬殺 (E)</button>
+        <button class="reset-btn" onclick="restartGame()">🔄 リセット</button>
+        <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">🖥️ 拡大</button>
+        <button class="copy-btn" onclick="copySourceCode()">📋 コピー</button>
     </div>
 
     <div id="controls-guide">
-        🎮 <b>操作方法:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 通常攻撃 | <kbd>Q</kbd> : 必殺技
+        🎮 <b>操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 15体撃破全画面瞬殺
     </div>
 
     <div id="toast">コードをコピーしました！</div>
@@ -352,8 +360,10 @@ const maxHpText = document.getElementById('max-hp-text');
 const hpBar = document.getElementById('hp-bar');
 const enemiesDisplay = document.getElementById('enemies-display');
 const specialDisplay = document.getElementById('special-display');
+const ultimateDisplay = document.getElementById('ultimate-display');
 const waveDisplay = document.getElementById('wave-display');
 const specialBtn = document.getElementById('specialBtn');
+const ultimateBtn = document.getElementById('ultimateBtn');
 
 // 5体のキャラクターデータ
 const CHARACTER_TYPES = [
@@ -382,12 +392,13 @@ const keys = {
     ArrowLeft: false,
     ArrowRight: false,
     Space: false,
-    KeyQ: false
+    KeyQ: false,
+    KeyE: false
 };
 
 window.addEventListener('keydown', (e) => {
     initAudio();
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE'].includes(e.code)) {
         e.preventDefault();
     }
     if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = true;
@@ -396,10 +407,13 @@ window.addEventListener('keydown', (e) => {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = true;
     if (e.code === 'Space') keys.Space = true;
     if (e.code === 'KeyQ') keys.KeyQ = true;
+    if (e.code === 'KeyE') {
+        triggerUltimateMove();
+    }
 }, { passive: false });
 
 window.addEventListener('keyup', (e) => {
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE'].includes(e.code)) {
         e.preventDefault();
     }
     if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = false;
@@ -439,9 +453,9 @@ document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 function updateFullscreenButton() {
     const btn = document.getElementById('fullscreenBtn');
     if (document.fullscreenElement || document.webkitFullscreenElement) {
-        btn.innerHTML = '📉 画面縮小';
+        btn.innerHTML = '📉 縮小';
     } else {
-        btn.innerHTML = '🖥️ 画面拡大';
+        btn.innerHTML = '🖥️ 拡大';
     }
 }
 
@@ -473,36 +487,35 @@ class Particle {
     }
 }
 
-// お助け・トラップアイテムクラス (イラスト調デザイン)
+// お助け・トラップアイテムクラス
 class ItemDrop {
     constructor(x, type) {
         this.x = x;
         this.y = -30;
         this.speedY = 1.3 + Math.random() * 0.5;
-        this.type = type; // 'full_heal', 'invincible', 'half_heal', 'enemy_spawner'
+        this.type = type; // 'full_heal', 'invincible', 'half_heal', 'enemy_spawner', 'gourmet_spyzer'
         this.radius = 20;
         this.pulseAngle = 0;
-        this.life = 600; // 10秒画面に留まる
+        this.life = 600;
     }
 
     update() {
         this.y += this.speedY;
         this.pulseAngle += 0.05;
 
-        // 地面に到達したら速度停止
         if (this.y > canvas.height - 40) {
             this.y = canvas.height - 40;
             this.speedY = 0;
             this.life--;
         }
 
-        // 光の浮遊キラキラ粒子
         if (Math.random() < 0.3) {
             let pColor = '#38bdf8';
             if (this.type === 'full_heal') pColor = '#facc15';
             else if (this.type === 'invincible') pColor = '#38bdf8';
             else if (this.type === 'half_heal') pColor = '#4ade80';
             else if (this.type === 'enemy_spawner') pColor = '#a855f7';
+            else if (this.type === 'gourmet_spyzer') pColor = '#f97316';
 
             particles.push(new Particle(
                 this.x + (Math.random() - 0.5) * 20,
@@ -519,26 +532,25 @@ class ItemDrop {
         const pulseScale = 1 + Math.sin(this.pulseAngle) * 0.08;
         ctx.scale(pulseScale, pulseScale);
 
-        // 背景外光オーラ
         let auraColor = 'rgba(56, 189, 248, 0.4)';
         if (this.type === 'full_heal') auraColor = 'rgba(250, 204, 21, 0.5)';
         else if (this.type === 'invincible') auraColor = 'rgba(56, 189, 248, 0.5)';
         else if (this.type === 'half_heal') auraColor = 'rgba(34, 197, 94, 0.5)';
         else if (this.type === 'enemy_spawner') auraColor = 'rgba(168, 85, 247, 0.6)';
+        else if (this.type === 'gourmet_spyzer') auraColor = 'rgba(249, 115, 22, 0.6)';
 
         ctx.fillStyle = auraColor;
         ctx.beginPath();
         ctx.arc(0, 0, 22, 0, Math.PI * 2);
         ctx.fill();
 
-        // 外枠リング
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, 18, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 1. 体力全回復 (❤️ 黄金グラデーションハート)
+        // 1. 体力全回復 (❤️ 黄金ハート)
         if (this.type === 'full_heal') {
             ctx.fillStyle = '#facc15';
             ctx.beginPath();
@@ -548,18 +560,17 @@ class ItemDrop {
             ctx.fill();
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 10px sans-serif';
+            ctx.font = 'bold 9px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('全回復', 0, 15);
         }
-        // 2. 5秒間無敵 (🛡️ 虹色に光る星の盾)
+        // 2. 5秒間無敵 (🛡️ 虹色星盾)
         else if (this.type === 'invincible') {
             ctx.fillStyle = '#38bdf8';
             ctx.beginPath();
             ctx.arc(0, 0, 10, 0, Math.PI * 2);
             ctx.fill();
 
-            // 星型イラスト
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             for (let i = 0; i < 5; i++) {
@@ -570,11 +581,11 @@ class ItemDrop {
             ctx.fill();
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 10px sans-serif';
+            ctx.font = 'bold 9px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('無敵', 0, 15);
         }
-        // 3. 体力半分回復 (💚 エメラルドポーションポーション)
+        // 3. 体力半分回復 (💚 ポーション)
         else if (this.type === 'half_heal') {
             ctx.fillStyle = '#22c55e';
             ctx.beginPath();
@@ -585,11 +596,11 @@ class ItemDrop {
             ctx.fillRect(-3, -10, 6, 4);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 10px sans-serif';
+            ctx.font = 'bold 9px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('50%回復', 0, 15);
         }
-        // 4. 敵10体強襲トラップ (💀 紫の呪いのドクロ)
+        // 4. 敵10体強襲トラップ (💀 呪いドクロ)
         else if (this.type === 'enemy_spawner') {
             ctx.fillStyle = '#a855f7';
             ctx.beginPath();
@@ -597,7 +608,6 @@ class ItemDrop {
             ctx.fill();
             ctx.fillRect(-5, 3, 10, 5);
 
-            // ドクロの目
             ctx.fillStyle = '#0f172a';
             ctx.beginPath();
             ctx.arc(-3, -3, 2.5, 0, Math.PI * 2);
@@ -605,9 +615,26 @@ class ItemDrop {
             ctx.fill();
 
             ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 10px sans-serif';
+            ctx.font = 'bold 9px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText('強襲10体', 0, 15);
+        }
+        // 5. グルメスパイザー (💥 オレンジスパイスクラッシャー)
+        else if (this.type === 'gourmet_spyzer') {
+            ctx.fillStyle = '#f97316';
+            ctx.beginPath();
+            ctx.fillRect(-6, -10, 12, 16);
+            ctx.fill();
+
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(0, -10, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('スパイザー', 0, 15);
         }
 
         ctx.restore();
@@ -716,8 +743,13 @@ let particles = [];
 let floatingTexts = [];
 let projectiles = [];
 let itemDrops = [];
-let itemSpawnTimer = 300; // 5秒ごとにアイテム降下チェック
+let itemSpawnTimer = 300;
 let screenShake = 0;
+
+// 15体撃破で解放される全画面瞬殺用変数
+let killCount = 0;
+const REQUIRED_KILLS_FOR_ULTIMATE = 15;
+let ultimateFlashTimer = 0; // 全画面瞬殺閃光エフェクト
 
 class Player {
     constructor(x, y, charIndex) {
@@ -734,22 +766,19 @@ class Player {
         this.attackTimer = 0;
         this.attackHasHit = false;
         
-        // 必殺技＆無敵アイテムタイマー
         this.specialCooldown = 0;
         this.maxSpecialCooldown = this.charConfig.skillCost;
         this.isSpecialActive = false;
         this.specialTimer = 0;
         this.specialAngle = 0;
-        this.invincibleTimer = 0; // 5秒間無敵 (300フレーム)
+        this.invincibleTimer = 0;
         
-        // アニメーション用
         this.walkCycle = 0;
     }
 
     update() {
         if (this.invincibleTimer > 0) {
             this.invincibleTimer--;
-            // 無敵中の虹色輝きパーティクル
             if (Math.random() < 0.4) {
                 particles.push(new Particle(
                     this.x + (Math.random() - 0.5) * 30,
@@ -857,7 +886,6 @@ class Player {
         if (this.y < 60) this.y = 60;
         if (this.y > canvas.height - 30) this.y = canvas.height - 30;
 
-        // 通常攻撃
         if (keys.Space && !this.isAttacking) {
             this.isAttacking = true;
             this.attackTimer = 15;
@@ -872,7 +900,6 @@ class Player {
             }
         }
 
-        // 必殺技起動
         if (keys.KeyQ && this.specialCooldown === 0) {
             this.triggerSpecial();
         }
@@ -953,7 +980,6 @@ class Player {
         const legAngle = Math.sin(this.walkCycle) * 0.5;
         const charName = this.charConfig.name;
 
-        // 【5秒間無敵状態の虹色オーラリング】
         if (this.invincibleTimer > 0) {
             ctx.strokeStyle = `hsl(${(Date.now() / 5) % 360}, 100%, 65%)`;
             ctx.lineWidth = 4;
@@ -966,7 +992,6 @@ class Player {
             ctx.fillText(`無敵 ${(this.invincibleTimer / 60).toFixed(1)}s`, -18, -48);
         }
 
-        // 【ダークマージ】極大ビーム
         if (this.isSpecialActive && charName === '大魔導士ダークマージ') {
             const beamLength = canvas.width;
             ctx.save();
@@ -979,7 +1004,6 @@ class Player {
             ctx.restore();
         }
 
-        // 必殺技オーラ
         if (this.isSpecialActive && charName !== '大魔導士ダークマージ') {
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 5;
@@ -994,9 +1018,7 @@ class Player {
             ctx.stroke();
         }
 
-        // --- キャラクター別スキン描画 ---
-
-        // 1. バランス剣士
+        // キャラクター別スキン描画
         if (charName === 'バランス剣士') {
             ctx.strokeStyle = '#cbd5e1';
             ctx.lineWidth = 3;
@@ -1014,7 +1036,6 @@ class Player {
             ctx.lineTo(-dir * 20, -18 + Math.cos(Date.now() * 0.01) * 3);
             ctx.stroke();
         }
-        // 2. バイキング重戦士
         else if (charName === 'バイキング重戦士') {
             ctx.fillStyle = '#ef4444';
             ctx.strokeStyle = '#f59e0b';
@@ -1036,7 +1057,6 @@ class Player {
             ctx.fillStyle = '#f59e0b';
             ctx.fillRect(-6, -12, 12, 12);
         }
-        // 3. 疾風影忍者
         else if (charName === '疾風影忍者') {
             ctx.fillStyle = '#facc15';
             ctx.fillRect(-8, -30, 16, 4);
@@ -1048,7 +1068,6 @@ class Player {
             ctx.lineTo(-dir * 26, -14 + Math.sin(Date.now() * 0.015) * 5);
             ctx.stroke();
         }
-        // 4. 聖騎士ガーディアン
         else if (charName === '聖騎士ガーディアン') {
             ctx.fillStyle = '#22c55e';
             ctx.strokeStyle = '#4ade80';
@@ -1076,7 +1095,6 @@ class Player {
             ctx.lineTo(dir * 5, -23);
             ctx.stroke();
         }
-        // 5. 大魔導士ダークマージ
         else if (charName === '大魔導士ダークマージ') {
             ctx.fillStyle = '#a855f7';
             ctx.strokeStyle = '#c084fc';
@@ -1176,7 +1194,6 @@ class Enemy {
             this.y += (dy / dist) * this.speed;
         } else {
             if (this.attackCooldown <= 0 && !player.isSpecialActive) {
-                // 無敵状態チェック
                 if (player.invincibleTimer > 0) {
                     this.attackCooldown = 40;
                     playSound('hit');
@@ -1258,11 +1275,39 @@ class Enemy {
     }
 }
 
-// 追加の敵10体を降下させる関数
+// 15体撃破で解放される全画面瞬殺の発動関数
+function triggerUltimateMove() {
+    initAudio();
+    if (killCount < REQUIRED_KILLS_FOR_ULTIMATE) return;
+
+    killCount -= REQUIRED_KILLS_FOR_ULTIMATE;
+    screenShake = 25;
+    ultimateFlashTimer = 18; // 画面閃光エフェクト
+    playSound('win');
+    playSound('special');
+
+    floatingTexts.push(new FloatingText(canvas.width / 2, canvas.height / 2 - 40, '💥 全画面瞬殺一閃!! 💥', '#ec4899'));
+
+    // 画面上の全敵を即死撃破
+    enemies.forEach(enemy => {
+        enemy.hp = -999;
+        for (let i = 0; i < 20; i++) {
+            particles.push(new Particle(
+                enemy.x, enemy.y, '#ec4899', 5,
+                (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12, 30
+            ));
+            particles.push(new Particle(
+                enemy.x, enemy.y, '#facc15', 3,
+                (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 20
+            ));
+        }
+    });
+}
+
 function spawnExtraEnemies(count = 10) {
     for (let i = 0; i < count; i++) {
         const x = 60 + Math.random() * (canvas.width - 120);
-        const y = -30 - Math.random() * 150; // 空から降りてくる
+        const y = -30 - Math.random() * 150;
         enemies.push(new Enemy(x, y, false));
     }
 }
@@ -1295,32 +1340,31 @@ function updateGame() {
     player.update();
 
     if (screenShake > 0) screenShake--;
+    if (ultimateFlashTimer > 0) ultimateFlashTimer--;
 
-    // お助けアイテムの定期的降下生成 (約7秒毎)
+    // アイテム定期生成 (グルメスパイザーを含む5種類)
     itemSpawnTimer--;
     if (itemSpawnTimer <= 0) {
-        itemSpawnTimer = 420;
-        const types = ['full_heal', 'invincible', 'half_heal', 'enemy_spawner'];
+        itemSpawnTimer = 400;
+        const types = ['full_heal', 'invincible', 'half_heal', 'enemy_spawner', 'gourmet_spyzer'];
         const chosenType = types[Math.floor(Math.random() * types.length)];
         const spawnX = 60 + Math.random() * (canvas.width - 120);
         itemDrops.push(new ItemDrop(spawnX, chosenType));
     }
 
-    // アイテムの更新と取得判定
+    // アイテムの更新・取得判定
     itemDrops.forEach((item, idx) => {
         item.update();
 
-        // プレイヤー取得チェック
         const dist = Math.hypot(item.x - player.x, item.y - player.y);
         if (dist < item.radius + player.radius + 8) {
-            // アイテム効能の発動
             if (item.type === 'full_heal') {
                 player.hp = player.maxHp;
                 playSound('win');
                 floatingTexts.push(new FloatingText(player.x, player.y - 30, '❤️ HP全回復!!', '#facc15'));
             }
             else if (item.type === 'invincible') {
-                player.invincibleTimer = 300; // 5秒間無敵
+                player.invincibleTimer = 300;
                 playSound('special');
                 floatingTexts.push(new FloatingText(player.x, player.y - 30, '✨ 5秒間無敵発動! ✨', '#38bdf8'));
             }
@@ -1330,13 +1374,19 @@ function updateGame() {
                 floatingTexts.push(new FloatingText(player.x, player.y - 30, '💚 HP50%回復!', '#22c55e'));
             }
             else if (item.type === 'enemy_spawner') {
-                spawnExtraEnemies(10); // 敵10体追加降下
+                spawnExtraEnemies(10);
                 screenShake = 14;
                 playSound('hit');
                 floatingTexts.push(new FloatingText(player.x, player.y - 30, '💀 呪い発動! 敵10体強襲!', '#ef4444'));
             }
+            // 【グルメスパイザー】必殺技のクールダウンを即座にリセット！
+            else if (item.type === 'gourmet_spyzer') {
+                player.specialCooldown = 0;
+                playSound('win');
+                playSound('special');
+                floatingTexts.push(new FloatingText(player.x, player.y - 30, '💥 グルメスパイザー! 必殺技リセット!', '#f97316'));
+            }
 
-            // キラキラパーティクル
             for (let i = 0; i < 15; i++) {
                 particles.push(new Particle(
                     item.x, item.y, '#ffffff', 4,
@@ -1394,9 +1444,11 @@ function updateGame() {
         });
     }
 
+    // 敵の更新と撃破処理（撃破数カウント）
     enemies.forEach((enemy, index) => {
         enemy.update(player);
         if (enemy.hp <= 0) {
+            killCount++; // 撃破数をカウント
             for (let i = 0; i < 15; i++) {
                 particles.push(new Particle(
                     enemy.x, enemy.y, enemy.color, 4,
@@ -1434,6 +1486,7 @@ function updateGame() {
         if (ft.life <= 0) floatingTexts.splice(idx, 1);
     });
 
+    // UI更新
     hpText.innerText = Math.max(0, player.hp);
     maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
@@ -1447,10 +1500,23 @@ function updateGame() {
         specialBtn.innerText = `⚡ ${player.charConfig.skillName} (Q)`;
     } else {
         const sec = (player.specialCooldown / 60).toFixed(1);
-        specialDisplay.innerText = `冷却中 (${sec}秒)`;
+        specialDisplay.innerText = `冷却中 (${sec}s)`;
         specialDisplay.style.color = '#9ca3af';
         specialBtn.disabled = true;
         specialBtn.innerText = `⚡ 冷却中 (${sec}s)`;
+    }
+
+    // 全画面瞬殺技UI
+    if (killCount >= REQUIRED_KILLS_FOR_ULTIMATE) {
+        ultimateDisplay.innerText = 'READY!';
+        ultimateDisplay.style.color = '#f43f5e';
+        ultimateBtn.disabled = false;
+        ultimateBtn.innerText = '💥 全画面瞬殺 (E)';
+    } else {
+        ultimateDisplay.innerText = `${killCount}/${REQUIRED_KILLS_FOR_ULTIMATE}`;
+        ultimateDisplay.style.color = '#ec4899';
+        ultimateBtn.disabled = true;
+        ultimateBtn.innerText = `💥 瞬殺 (${killCount}/${REQUIRED_KILLS_FOR_ULTIMATE})`;
     }
 }
 
@@ -1485,6 +1551,12 @@ function drawGame() {
     particles.forEach(p => p.draw(ctx));
     floatingTexts.forEach(ft => ft.draw(ctx));
 
+    // 全画面瞬殺発動時の閃光フラッシュ
+    if (ultimateFlashTimer > 0) {
+        ctx.fillStyle = `rgba(244, 63, 94, ${ultimateFlashTimer / 18})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     if (gameOver) {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1496,7 +1568,7 @@ function drawGame() {
 
         ctx.fillStyle = '#94a3b8';
         ctx.font = '20px sans-serif';
-        ctx.fillText('「ゲームリセット」ボタンで再挑戦できます', canvas.width / 2, canvas.height / 2 + 30);
+        ctx.fillText('「リセット」ボタンで再挑戦できます', canvas.width / 2, canvas.height / 2 + 30);
     } else if (gameWon) {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1529,6 +1601,7 @@ function restartGame() {
     initAudio();
     player = new Player(150, 250, selectedCharIndex);
     currentWave = 1;
+    killCount = 0;
     gameOver = false;
     gameWon = false;
     particles = [];
