@@ -291,7 +291,7 @@
     </div>
 
     <div id="controls-guide">
-        🎮 <b>操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 15体撃破全画面瞬殺
+        🎮 <b>操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 全画面瞬殺
     </div>
 
     <div id="toast">コードをコピーしました！</div>
@@ -428,7 +428,6 @@ document.addEventListener('touchmove', (e) => {
     e.preventDefault();
 }, { passive: false });
 
-// 画面拡大機能
 function toggleFullscreen() {
     initAudio();
     const docEl = document.documentElement;
@@ -487,13 +486,227 @@ class Particle {
     }
 }
 
+// --- ステージ障害物システム ---
+
+// 1. マグマ地帯 (乗ると継続ダメージ)
+class MagmaZone {
+    constructor(x, y, radius = 35) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.burnCooldown = 0;
+    }
+    update(player) {
+        if (this.burnCooldown > 0) this.burnCooldown--;
+
+        // マグマ火の粉パーティクル
+        if (Math.random() < 0.3) {
+            particles.push(new Particle(
+                this.x + (Math.random() - 0.5) * (this.radius * 1.5),
+                this.y + (Math.random() - 0.5) * (this.radius * 1.5),
+                '#ef4444', 3, (Math.random() - 0.5) * 2, -1 - Math.random() * 2, 18
+            ));
+        }
+
+        // プレイヤーダメージチェック
+        const dist = Math.hypot(player.x - this.x, player.y - this.y);
+        if (dist < this.radius + player.radius) {
+            if (this.burnCooldown <= 0 && player.invincibleTimer <= 0) {
+                player.hp -= 1;
+                this.burnCooldown = 40; // 0.6秒ごとにダメージ
+                screenShake = 5;
+                playSound('hit');
+                floatingTexts.push(new FloatingText(player.x, player.y - 20, '🔥 マグマ焦げ! -1', '#ef4444'));
+            }
+        }
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 赤熱マグマの池
+        const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, this.radius);
+        grad.addColorStop(0, '#facc15');
+        grad.addColorStop(0.5, '#f97316');
+        grad.addColorStop(1, '#dc2626');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#7f1d1d';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+}
+
+// 2. 石柱障害物 (進入不可・移動をブロック)
+class PillarObstacle {
+    constructor(x, y, radius = 24) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+    }
+    update(player, enemies) {
+        // プレイヤーの押し出し押し返し判定
+        const distP = Math.hypot(player.x - this.x, player.y - this.y);
+        if (distP < this.radius + player.radius) {
+            const angle = Math.atan2(player.y - this.y, player.x - this.x);
+            player.x = this.x + Math.cos(angle) * (this.radius + player.radius);
+            player.y = this.y + Math.sin(angle) * (this.radius + player.radius);
+        }
+
+        // 敵の押し出し判定
+        enemies.forEach(enemy => {
+            const distE = Math.hypot(enemy.x - this.x, enemy.y - this.y);
+            if (distE < this.radius + enemy.radius) {
+                const angle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
+                enemy.x = this.x + Math.cos(angle) * (this.radius + enemy.radius);
+                enemy.y = this.y + Math.sin(angle) * (this.radius + enemy.radius);
+            }
+        });
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 影
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, this.radius - 2, this.radius, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3D六角形柱
+        ctx.fillStyle = '#475569';
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 柱の模様
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(-4, -4, this.radius * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
+// 3. 矢の発射台 (定期的に矢を発射)
+class ArrowTrap {
+    constructor(x, y, facingLeft = true) {
+        this.x = x;
+        this.y = y;
+        this.facingLeft = facingLeft;
+        this.cooldown = 150; // 2.5秒ごとに矢発射
+    }
+    update(arrowProjectiles) {
+        this.cooldown--;
+        if (this.cooldown <= 0) {
+            this.cooldown = 180; // 3秒間隔
+            arrowProjectiles.push(new ArrowProjectile(this.x, this.y, this.facingLeft));
+            playSound('punch');
+        }
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const dir = this.facingLeft ? -1 : 1;
+
+        // 台座
+        ctx.fillStyle = '#78350f';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.fillRect(-15, -15, 30, 30);
+        ctx.strokeRect(-15, -15, 30, 30);
+
+        // 弓矢の銃口
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(dir * 12, 0, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
+// 発射された矢
+class ArrowProjectile {
+    constructor(x, y, facingLeft) {
+        this.x = x;
+        this.y = y;
+        this.speedX = facingLeft ? -7 : 7;
+        this.radius = 12;
+        this.life = 150;
+    }
+    update(player, enemies) {
+        this.x += this.speedX;
+        this.life--;
+
+        // プレイヤー直撃判定
+        const dist = Math.hypot(player.x - this.x, player.y - this.y);
+        if (dist < this.radius + player.radius) {
+            if (player.invincibleTimer <= 0) {
+                player.hp -= 1;
+                screenShake = 6;
+                playSound('hit');
+                floatingTexts.push(new FloatingText(player.x, player.y - 20, '🏹 矢が直撃! -1', '#ef4444'));
+            }
+            this.life = 0; // 命中で消滅
+        }
+
+        // 敵への誤射ヒット判定
+        enemies.forEach(enemy => {
+            const distE = Math.hypot(enemy.x - this.x, enemy.y - this.y);
+            if (distE < this.radius + enemy.radius) {
+                enemy.hp -= 2;
+                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-2 矢被弾', '#facc15'));
+                this.life = 0;
+            }
+        });
+    }
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const angle = this.speedX < 0 ? Math.PI : 0;
+        ctx.rotate(angle);
+
+        // 矢の描画
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-12, 0);
+        ctx.lineTo(10, 0);
+        ctx.stroke();
+
+        // 矢尻
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.moveTo(14, 0);
+        ctx.lineTo(7, -5);
+        ctx.lineTo(7, 5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
 // お助け・トラップアイテムクラス
 class ItemDrop {
     constructor(x, type) {
         this.x = x;
         this.y = -30;
         this.speedY = 1.3 + Math.random() * 0.5;
-        this.type = type; // 'full_heal', 'invincible', 'half_heal', 'enemy_spawner', 'gourmet_spyzer'
+        this.type = type;
         this.radius = 20;
         this.pulseAngle = 0;
         this.life = 600;
@@ -550,7 +763,6 @@ class ItemDrop {
         ctx.arc(0, 0, 18, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 1. 体力全回復 (❤️ 黄金ハート)
         if (this.type === 'full_heal') {
             ctx.fillStyle = '#facc15';
             ctx.beginPath();
@@ -564,7 +776,6 @@ class ItemDrop {
             ctx.textAlign = 'center';
             ctx.fillText('全回復', 0, 15);
         }
-        // 2. 5秒間無敵 (🛡️ 虹色星盾)
         else if (this.type === 'invincible') {
             ctx.fillStyle = '#38bdf8';
             ctx.beginPath();
@@ -585,7 +796,6 @@ class ItemDrop {
             ctx.textAlign = 'center';
             ctx.fillText('無敵', 0, 15);
         }
-        // 3. 体力半分回復 (💚 ポーション)
         else if (this.type === 'half_heal') {
             ctx.fillStyle = '#22c55e';
             ctx.beginPath();
@@ -600,7 +810,6 @@ class ItemDrop {
             ctx.textAlign = 'center';
             ctx.fillText('50%回復', 0, 15);
         }
-        // 4. 敵10体強襲トラップ (💀 呪いドクロ)
         else if (this.type === 'enemy_spawner') {
             ctx.fillStyle = '#a855f7';
             ctx.beginPath();
@@ -619,7 +828,6 @@ class ItemDrop {
             ctx.textAlign = 'center';
             ctx.fillText('強襲10体', 0, 15);
         }
-        // 5. グルメスパイザー (💥 オレンジスパイスクラッシャー)
         else if (this.type === 'gourmet_spyzer') {
             ctx.fillStyle = '#f97316';
             ctx.beginPath();
@@ -746,10 +954,15 @@ let itemDrops = [];
 let itemSpawnTimer = 300;
 let screenShake = 0;
 
-// 15体撃破で解放される全画面瞬殺用変数
 let killCount = 0;
 const REQUIRED_KILLS_FOR_ULTIMATE = 15;
-let ultimateFlashTimer = 0; // 全画面瞬殺閃光エフェクト
+let ultimateFlashTimer = 0;
+
+// ステージ障害物リスト
+let magmaZones = [];
+let pillarObstacles = [];
+let arrowTraps = [];
+let arrowProjectiles = [];
 
 class Player {
     constructor(x, y, charIndex) {
@@ -1018,7 +1231,7 @@ class Player {
             ctx.stroke();
         }
 
-        // キャラクター別スキン描画
+        // キャラクター別スキン
         if (charName === 'バランス剣士') {
             ctx.strokeStyle = '#cbd5e1';
             ctx.lineWidth = 3;
@@ -1120,7 +1333,6 @@ class Player {
             ctx.fill();
         }
 
-        // 棒人間の基本骨格
         ctx.strokeStyle = this.color;
         ctx.lineWidth = 4;
         ctx.lineCap = 'round';
@@ -1275,30 +1487,24 @@ class Enemy {
     }
 }
 
-// 15体撃破で解放される全画面瞬殺の発動関数
 function triggerUltimateMove() {
     initAudio();
     if (killCount < REQUIRED_KILLS_FOR_ULTIMATE) return;
 
     killCount -= REQUIRED_KILLS_FOR_ULTIMATE;
     screenShake = 25;
-    ultimateFlashTimer = 18; // 画面閃光エフェクト
+    ultimateFlashTimer = 18;
     playSound('win');
     playSound('special');
 
     floatingTexts.push(new FloatingText(canvas.width / 2, canvas.height / 2 - 40, '💥 全画面瞬殺一閃!! 💥', '#ec4899'));
 
-    // 画面上の全敵を即死撃破
     enemies.forEach(enemy => {
         enemy.hp = -999;
         for (let i = 0; i < 20; i++) {
             particles.push(new Particle(
                 enemy.x, enemy.y, '#ec4899', 5,
                 (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12, 30
-            ));
-            particles.push(new Particle(
-                enemy.x, enemy.y, '#facc15', 3,
-                (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 20
             ));
         }
     });
@@ -1330,6 +1536,23 @@ function spawnWave(wave) {
         const y = 80 + Math.random() * 380;
         enemies.push(new Enemy(x, y, isBoss));
     }
+
+    // ステージ障害物の生成 (マグマ、石柱、矢の発射台)
+    magmaZones = [
+        new MagmaZone(240, 360, 36),
+        new MagmaZone(560, 140, 36)
+    ];
+
+    pillarObstacles = [
+        new PillarObstacle(300, 200, 25),
+        new PillarObstacle(500, 320, 25)
+    ];
+
+    arrowTraps = [
+        new ArrowTrap(30, 250, false), // 右へ発射
+        new ArrowTrap(770, 250, true)   // 左へ発射
+    ];
+    arrowProjectiles = [];
 }
 
 spawnWave(currentWave);
@@ -1342,7 +1565,16 @@ function updateGame() {
     if (screenShake > 0) screenShake--;
     if (ultimateFlashTimer > 0) ultimateFlashTimer--;
 
-    // アイテム定期生成 (グルメスパイザーを含む5種類)
+    // 障害物・トラップの更新
+    magmaZones.forEach(magma => magma.update(player));
+    pillarObstacles.forEach(pillar => pillar.update(player, enemies));
+    arrowTraps.forEach(trap => trap.update(arrowProjectiles));
+    arrowProjectiles.forEach((arrow, idx) => {
+        arrow.update(player, enemies);
+        if (arrow.life <= 0) arrowProjectiles.splice(idx, 1);
+    });
+
+    // アイテム定期生成
     itemSpawnTimer--;
     if (itemSpawnTimer <= 0) {
         itemSpawnTimer = 400;
@@ -1352,7 +1584,6 @@ function updateGame() {
         itemDrops.push(new ItemDrop(spawnX, chosenType));
     }
 
-    // アイテムの更新・取得判定
     itemDrops.forEach((item, idx) => {
         item.update();
 
@@ -1379,7 +1610,6 @@ function updateGame() {
                 playSound('hit');
                 floatingTexts.push(new FloatingText(player.x, player.y - 30, '💀 呪い発動! 敵10体強襲!', '#ef4444'));
             }
-            // 【グルメスパイザー】必殺技のクールダウンを即座にリセット！
             else if (item.type === 'gourmet_spyzer') {
                 player.specialCooldown = 0;
                 playSound('win');
@@ -1444,11 +1674,10 @@ function updateGame() {
         });
     }
 
-    // 敵の更新と撃破処理（撃破数カウント）
     enemies.forEach((enemy, index) => {
         enemy.update(player);
         if (enemy.hp <= 0) {
-            killCount++; // 撃破数をカウント
+            killCount++;
             for (let i = 0; i < 15; i++) {
                 particles.push(new Particle(
                     enemy.x, enemy.y, enemy.color, 4,
@@ -1486,7 +1715,6 @@ function updateGame() {
         if (ft.life <= 0) floatingTexts.splice(idx, 1);
     });
 
-    // UI更新
     hpText.innerText = Math.max(0, player.hp);
     maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
@@ -1506,7 +1734,6 @@ function updateGame() {
         specialBtn.innerText = `⚡ 冷却中 (${sec}s)`;
     }
 
-    // 全画面瞬殺技UI
     if (killCount >= REQUIRED_KILLS_FOR_ULTIMATE) {
         ultimateDisplay.innerText = 'READY!';
         ultimateDisplay.style.color = '#f43f5e';
@@ -1544,6 +1771,12 @@ function drawGame() {
         ctx.stroke();
     }
 
+    // 障害物の描画 (背景レイヤー)
+    magmaZones.forEach(magma => magma.draw(ctx));
+    pillarObstacles.forEach(pillar => pillar.draw(ctx));
+    arrowTraps.forEach(trap => trap.draw(ctx));
+    arrowProjectiles.forEach(arrow => arrow.draw(ctx));
+
     player.draw(ctx);
     projectiles.forEach(proj => proj.draw(ctx));
     itemDrops.forEach(item => item.draw(ctx));
@@ -1551,7 +1784,6 @@ function drawGame() {
     particles.forEach(p => p.draw(ctx));
     floatingTexts.forEach(ft => ft.draw(ctx));
 
-    // 全画面瞬殺発動時の閃光フラッシュ
     if (ultimateFlashTimer > 0) {
         ctx.fillStyle = `rgba(244, 63, 94, ${ultimateFlashTimer / 18})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
