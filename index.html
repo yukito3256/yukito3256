@@ -228,19 +228,19 @@
         </div>
         <div class="char-card" onclick="selectCharacter(1)">
             <div class="char-name" style="color: #ef4444;">🔴 バーサーカー</div>
-            <div class="char-desc">HP:16 / 斧投げ大爆破</div>
+            <div class="char-desc">HP:16 / 斧投げ撃破</div>
         </div>
         <div class="char-card" onclick="selectCharacter(2)">
             <div class="char-name" style="color: #facc15;">⚡ 疾風忍者</div>
-            <div class="char-desc">HP:8 / 瞬身一閃(反対へ突撃)</div>
+            <div class="char-desc">HP:8 / 瞬身一閃(対岸突撃)</div>
         </div>
         <div class="char-card" onclick="selectCharacter(3)">
             <div class="char-name" style="color: #22c55e;">🟢 ガーディアン</div>
-            <div class="char-desc">HP:20 / 聖なる盾&回復</div>
+            <div class="char-desc">HP:20 / 聖なる祈り(純粋回復)</div>
         </div>
         <div class="char-card" onclick="selectCharacter(4)">
             <div class="char-name" style="color: #a855f7;">🟣 ダークマージ</div>
-            <div class="char-desc">HP:9 / 暗黒波動砲</div>
+            <div class="char-desc">HP:9 / 暗黒極大ビーム</div>
         </div>
     </div>
 
@@ -344,8 +344,8 @@ const CHARACTER_TYPES = [
     { name: 'バランス', color: '#38bdf8', maxHp: 10, speed: 4.5, skillName: '必殺旋風斬り', skillCost: 180 },
     { name: 'バーサーカー', color: '#ef4444', maxHp: 16, speed: 3.8, skillName: '斧投げ撃破', skillCost: 160 },
     { name: '疾風忍者', color: '#facc15', maxHp: 8, speed: 6.2, skillName: '瞬身一閃(対岸突撃)', skillCost: 150 },
-    { name: 'ガーディアン', color: '#22c55e', maxHp: 20, speed: 3.5, skillName: '聖なる盾&回復', skillCost: 220 },
-    { name: 'ダークマージ', color: '#a855f7', maxHp: 9, speed: 4.8, skillName: '暗黒波動砲', skillCost: 170 }
+    { name: 'ガーディアン', color: '#22c55e', maxHp: 20, speed: 3.5, skillName: '聖なる祈り(回復)', skillCost: 200 },
+    { name: 'ダークマージ', color: '#a855f7', maxHp: 9, speed: 4.8, skillName: '暗黒極大ビーム', skillCost: 180 }
 ];
 
 let selectedCharIndex = 0;
@@ -438,7 +438,6 @@ class AxeProjectile {
         this.angle += 0.4;
         this.life--;
 
-        // 軌跡エフェクト
         particles.push(new Particle(
             this.x, this.y, '#ef4444', 5,
             (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, 15
@@ -448,7 +447,6 @@ class AxeProjectile {
             (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, 12
         ));
 
-        // 敵への衝突判定
         enemies.forEach(enemy => {
             if (!this.hitEnemies.has(enemy)) {
                 const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
@@ -473,25 +471,21 @@ class AxeProjectile {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
 
-        // 両刃斧の描画
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 4;
         ctx.fillStyle = '#f59e0b';
 
-        // 柄
         ctx.beginPath();
         ctx.moveTo(-20, 0);
         ctx.lineTo(20, 0);
         ctx.stroke();
 
-        // 斧刃右
         ctx.beginPath();
         ctx.arc(12, 0, 16, -Math.PI / 3, Math.PI / 3);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
-        // 斧刃左
         ctx.beginPath();
         ctx.arc(-12, 0, 16, Math.PI * 2/3, Math.PI * 4/3);
         ctx.closePath();
@@ -561,7 +555,7 @@ class Player {
             this.specialTimer--;
             this.specialAngle += 0.4;
             
-            // バランスキャラなどの旋風オーラ
+            // バランスキャラの旋風オーラ
             if (this.charConfig.name === 'バランス') {
                 for (let i = 0; i < 3; i++) {
                     const angle = Math.random() * Math.PI * 2;
@@ -576,6 +570,50 @@ class Player {
                         20
                     ));
                 }
+            }
+            // 【ガーディアン】ダメージなし・回復の聖なるエフェクト
+            else if (this.charConfig.name === 'ガーディアン') {
+                for (let i = 0; i < 4; i++) {
+                    particles.push(new Particle(
+                        this.x + (Math.random() - 0.5) * 40,
+                        this.y + (Math.random() - 0.5) * 40,
+                        '#4ade80',
+                        4,
+                        0,
+                        -2 - Math.random() * 2,
+                        25
+                    ));
+                }
+            }
+            // 【ダークマージ】暗黒極大ビームの発射＆敵への継続ダメージ
+            else if (this.charConfig.name === 'ダークマージ') {
+                const dir = this.facing === 'right' ? 1 : -1;
+                const beamY = this.y - 10;
+                
+                // ビームの光子パーティクル
+                for (let i = 0; i < 6; i++) {
+                    const bx = this.x + dir * (Math.random() * canvas.width);
+                    const by = beamY + (Math.random() - 0.5) * 50;
+                    particles.push(new Particle(
+                        bx, by, '#c084fc', 4,
+                        dir * (5 + Math.random() * 5),
+                        (Math.random() - 0.5) * 2,
+                        15
+                    ));
+                }
+
+                // ビーム範囲内の敵へ継続ダメージ
+                enemies.forEach(enemy => {
+                    const inRange = dir === 1 ? enemy.x >= this.x : enemy.x <= this.x;
+                    if (inRange && Math.abs(enemy.y - beamY) < 45) {
+                        enemy.hp -= 0.35; // 連続照射大ダメージ
+                        enemy.x += dir * 1.5; // ノックバック
+                        particles.push(new Particle(
+                            enemy.x, enemy.y, '#a855f7', 4,
+                            (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
+                        ));
+                    }
+                });
             }
 
             if (this.specialTimer <= 0) {
@@ -641,26 +679,25 @@ class Player {
         if (this.specialCooldown > 0 || this.isSpecialActive) return;
         
         this.specialCooldown = this.maxSpecialCooldown;
-        screenShake = 12;
+        screenShake = 10;
         playSound('special');
 
         if (this.charConfig.name === 'バーサーカー') {
-            // 【バーサーカー】回転斧を投げて敵を一網打尽！
+            // 【バーサーカー】回転斧投げ
             projectiles.push(new AxeProjectile(this.x, this.y, this.facing));
             floatingTexts.push(new FloatingText(this.x, this.y - 40, '斧投げ撃破!!', '#ef4444'));
         } 
         else if (this.charConfig.name === '疾風忍者') {
-            // 【疾風忍者】反対側へ瞬間移動し、通り道の敵を全て一閃斬撃！
+            // 【疾風忍者】反対側へ瞬間移動＆通り道の敵を一閃
             const startX = this.x;
             const startY = this.y;
             const targetX = this.facing === 'right' ? canvas.width - 50 : 50;
 
-            // 通り道の敵への大ダメージ
             const minX = Math.min(startX, targetX);
             const maxX = Math.max(startX, targetX);
             enemies.forEach(enemy => {
                 if (enemy.x >= minX - 30 && enemy.x <= maxX + 30 && Math.abs(enemy.y - startY) < 70) {
-                    enemy.hp -= 9; // 超大ダメージ
+                    enemy.hp -= 9;
                     floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-9 瞬身一閃!', '#facc15'));
                     for (let i = 0; i < 10; i++) {
                         particles.push(new Particle(
@@ -671,7 +708,6 @@ class Player {
                 }
             });
 
-            // 電光石火の軌跡エフェクト
             const steps = 30;
             for (let i = 0; i < steps; i++) {
                 const px = startX + (targetX - startX) * (i / steps);
@@ -679,26 +715,33 @@ class Player {
                     px, startY + (Math.random() - 0.5) * 20, '#facc15', 5,
                     (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, 25
                 ));
-                particles.push(new Particle(
-                    px, startY, '#ffffff', 3, 0, 0, 20
-                ));
             }
 
-            // プレイヤーを反対側へ即時移動
             this.x = targetX;
-            this.facing = this.facing === 'right' ? 'left' : 'right'; // 向きを反転
+            this.facing = this.facing === 'right' ? 'left' : 'right';
             floatingTexts.push(new FloatingText(targetX, startY - 40, '瞬身一閃!!', '#facc15'));
         } 
-        else {
-            // その他のキャラ
+        else if (this.charConfig.name === 'ガーディアン') {
+            // 【ガーディアン】ダメージは与えず、純粋に大幅回復（+8 HP）
+            this.isSpecialActive = true;
+            this.specialTimer = 40;
+            this.specialAngle = 0;
+            this.hp = Math.min(this.maxHp, this.hp + 8);
+            floatingTexts.push(new FloatingText(this.x, this.y - 40, '✨ HP+8 聖なる祈り(回復) ✨', '#22c55e'));
+        }
+        else if (this.charConfig.name === 'ダークマージ') {
+            // 【ダークマージ】極大暗黒ビームを照射！
             this.isSpecialActive = true;
             this.specialTimer = 45;
             this.specialAngle = 0;
-
-            if (this.charConfig.name === 'ガーディアン') {
-                this.hp = Math.min(this.maxHp, this.hp + 5);
-                floatingTexts.push(new FloatingText(this.x, this.y - 40, 'HP+5 回復!!', '#22c55e'));
-            }
+            screenShake = 16;
+            floatingTexts.push(new FloatingText(this.x, this.y - 40, '⚡ 暗黒極大ビーム!! ⚡', '#a855f7'));
+        }
+        else {
+            // バランス
+            this.isSpecialActive = true;
+            this.specialTimer = 45;
+            this.specialAngle = 0;
             floatingTexts.push(new FloatingText(this.x, this.y - 40, `${this.charConfig.skillName}!!`, this.color));
         }
     }
@@ -707,8 +750,28 @@ class Player {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // 必殺技発動中のグラフィックオーラ
-        if (this.isSpecialActive) {
+        // 【ダークマージ】極大ビームの描画
+        if (this.isSpecialActive && this.charConfig.name === 'ダークマージ') {
+            const dir = this.facing === 'right' ? 1 : -1;
+            const beamLength = canvas.width;
+            
+            ctx.save();
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 25;
+
+            // ビーム外殻
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
+            ctx.fillRect(0, -25, dir * beamLength, 50);
+
+            // ビーム芯（白・明るい紫）
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillRect(0, -10, dir * beamLength, 20);
+
+            ctx.restore();
+        }
+
+        // 必殺技オーラ (ガーディアン・バランス)
+        if (this.isSpecialActive && this.charConfig.name !== 'ダークマージ') {
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 5;
             ctx.beginPath();
@@ -900,14 +963,14 @@ function updateGame() {
 
     if (screenShake > 0) screenShake--;
 
-    // 飛び道具（バーサーカーの投げ斧など）の更新
+    // 飛び道具の更新
     projectiles.forEach((proj, idx) => {
         proj.update(enemies);
         if (proj.life <= 0) projectiles.splice(idx, 1);
     });
 
-    // 必殺技命中チェック (バランス/ダークマージなど)
-    if (player.isSpecialActive) {
+    // 必殺技範囲チェック (バランスキャラの旋風攻撃)
+    if (player.isSpecialActive && player.charConfig.name === 'バランス') {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
             if (dist < 80) {
