@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>棒人間アクションゲーム - 必殺技付き</title>
+    <title>棒人間アクションゲーム - 5キャラ＆全23Wave</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
@@ -34,6 +34,43 @@
             -webkit-text-fill-color: transparent;
             text-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
         }
+        #char-select-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .char-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 8px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            min-width: 120px;
+        }
+        .char-card:hover {
+            transform: translateY(-3px);
+            border-color: #38bdf8;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+        .char-card.active {
+            border-color: #facc15;
+            background: rgba(51, 65, 85, 0.9);
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+        }
+        .char-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .char-desc {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
         #game-container {
             position: relative;
             box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 20px rgba(56, 189, 248, 0.2);
@@ -181,18 +218,42 @@
 </head>
 <body>
 
-    <h1>⚔️ 棒人間アクションゲーム - 必殺技付き ⚔️</h1>
+    <h1>⚔️ 棒人間アクションゲーム - 5キャラ＆全23Wave ⚔️</h1>
+
+    <!-- キャラクター選択UI -->
+    <div id="char-select-container">
+        <div class="char-card active" onclick="selectCharacter(0)">
+            <div class="char-name" style="color: #38bdf8;">🔵 バランス</div>
+            <div class="char-desc">HP:10 / 必殺旋風斬り</div>
+        </div>
+        <div class="char-card" onclick="selectCharacter(1)">
+            <div class="char-name" style="color: #ef4444;">🔴 バーサーカー</div>
+            <div class="char-desc">HP:16 / 地鳴り爆散</div>
+        </div>
+        <div class="char-card" onclick="selectCharacter(2)">
+            <div class="char-name" style="color: #facc15;">⚡ 疾風忍者</div>
+            <div class="char-desc">HP:8 / 高速瞬身一撃</div>
+        </div>
+        <div class="char-card" onclick="selectCharacter(3)">
+            <div class="char-name" style="color: #22c55e;">🟢 ガーディアン</div>
+            <div class="char-desc">HP:20 / 聖なる盾&回復</div>
+        </div>
+        <div class="char-card" onclick="selectCharacter(4)">
+            <div class="char-name" style="color: #a855f7;">🟣 ダークマージ</div>
+            <div class="char-desc">HP:9 / 暗黒波動砲</div>
+        </div>
+    </div>
 
     <div id="ui">
         <div class="info-item">
-            ❤️ 体力 (HP): <span id="hp-text">10</span>/10
+            ❤️ 体力 (HP): <span id="hp-text">10</span>/<span id="max-hp-text">10</span>
             <div class="hp-bar-outer"><div class="hp-bar-inner" id="hp-bar"></div></div>
         </div>
         <div class="info-item">👾 残りの敵: <span id="enemies-display">7</span> 体</div>
         <div class="info-item" style="color: #facc15;">
             ⚡ 必殺技 (Q): <span id="special-display" style="color: #4ade80;">READY!</span>
         </div>
-        <div class="info-item">🏆 Wave: <span id="wave-display">1</span></div>
+        <div class="info-item">🏆 Wave: <span id="wave-display">1</span> / 23</div>
     </div>
 
     <div id="game-container">
@@ -206,7 +267,7 @@
     </div>
 
     <div id="controls-guide">
-        🎮 <b>操作方法:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 通常攻撃 | <kbd>Q</kbd> : 必殺旋風斬り
+        🎮 <b>操作方法:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 通常攻撃 | <kbd>Q</kbd> : 必殺技
     </div>
 
     <div id="toast">コードをコピーしました！</div>
@@ -271,11 +332,33 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const hpText = document.getElementById('hp-text');
+const maxHpText = document.getElementById('max-hp-text');
 const hpBar = document.getElementById('hp-bar');
 const enemiesDisplay = document.getElementById('enemies-display');
 const specialDisplay = document.getElementById('special-display');
 const waveDisplay = document.getElementById('wave-display');
 const specialBtn = document.getElementById('specialBtn');
+
+// 5体のキャラクターデータ
+const CHARACTER_TYPES = [
+    { name: 'バランス', color: '#38bdf8', maxHp: 10, speed: 4.5, skillName: '必殺旋風斬り', skillCost: 180 },
+    { name: 'バーサーカー', color: '#ef4444', maxHp: 16, speed: 3.8, skillName: '地鳴り爆散', skillCost: 200 },
+    { name: '疾風忍者', color: '#facc15', maxHp: 8, speed: 6.2, skillName: '高速瞬身一撃', skillCost: 150 },
+    { name: 'ガーディアン', color: '#22c55e', maxHp: 20, speed: 3.5, skillName: '聖なる盾&回復', skillCost: 220 },
+    { name: 'ダークマージ', color: '#a855f7', maxHp: 9, speed: 4.8, skillName: '暗黒波動砲', skillCost: 170 }
+];
+
+let selectedCharIndex = 0;
+
+function selectCharacter(index) {
+    selectedCharIndex = index;
+    const cards = document.querySelectorAll('.char-card');
+    cards.forEach((card, i) => {
+        if (i === index) card.classList.add('active');
+        else card.classList.remove('active');
+    });
+    restartGame();
+}
 
 const keys = {
     ArrowUp: false,
@@ -366,13 +449,15 @@ let floatingTexts = [];
 let screenShake = 0;
 
 class Player {
-    constructor(x, y) {
+    constructor(x, y, charIndex) {
         this.x = x;
         this.y = y;
+        this.charConfig = CHARACTER_TYPES[charIndex];
         this.radius = 14;
-        this.speed = 4.5;
-        this.hp = 10;
-        this.maxHp = 10;
+        this.speed = this.charConfig.speed;
+        this.hp = this.charConfig.maxHp;
+        this.maxHp = this.charConfig.maxHp;
+        this.color = this.charConfig.color;
         this.facing = 'right';
         this.isAttacking = false;
         this.attackTimer = 0;
@@ -380,7 +465,7 @@ class Player {
         
         // 必殺技関連
         this.specialCooldown = 0;
-        this.maxSpecialCooldown = 180; // 3秒 (60fps)
+        this.maxSpecialCooldown = this.charConfig.skillCost;
         this.isSpecialActive = false;
         this.specialTimer = 0;
         this.specialAngle = 0;
@@ -394,17 +479,17 @@ class Player {
             this.specialTimer--;
             this.specialAngle += 0.4;
             
-            // 必殺技エフェクト
+            // 各キャラ固有の必殺技エフェクト
             for (let i = 0; i < 3; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const dist = 30 + Math.random() * 50;
                 particles.push(new Particle(
                     this.x + Math.cos(angle) * dist,
                     this.y + Math.sin(angle) * dist,
-                    '#f59e0b',
-                    3,
-                    (Math.random() - 0.5) * 2,
-                    (Math.random() - 0.5) * 2,
+                    this.color,
+                    4,
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 3,
                     20
                 ));
             }
@@ -471,12 +556,19 @@ class Player {
     triggerSpecial() {
         if (this.specialCooldown > 0 || this.isSpecialActive) return;
         this.isSpecialActive = true;
-        this.specialTimer = 45; // 0.75秒間旋風
+        this.specialTimer = 45; // 0.75秒
         this.specialCooldown = this.maxSpecialCooldown;
         this.specialAngle = 0;
-        screenShake = 10;
+        screenShake = 12;
         playSound('special');
-        floatingTexts.push(new FloatingText(this.x, this.y - 40, '必殺旋風斬り!!', '#f59e0b'));
+
+        // ガーディアンはHPを回復
+        if (this.charConfig.name === 'ガーディアン') {
+            this.hp = Math.min(this.maxHp, this.hp + 5);
+            floatingTexts.push(new FloatingText(this.x, this.y - 40, 'HP+5 回復!!', '#22c55e'));
+        }
+
+        floatingTexts.push(new FloatingText(this.x, this.y - 40, `${this.charConfig.skillName}!!`, this.color));
     }
 
     draw(ctx) {
@@ -485,16 +577,16 @@ class Player {
 
         // 必殺技発動中のグラフィックオーラ
         if (this.isSpecialActive) {
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 4;
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 5;
             ctx.beginPath();
-            ctx.arc(0, 0, 70, this.specialAngle, this.specialAngle + Math.PI * 1.5);
+            ctx.arc(0, 0, 75, this.specialAngle, this.specialAngle + Math.PI * 1.5);
             ctx.stroke();
 
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(0, 0, 50, -this.specialAngle, -this.specialAngle + Math.PI);
+            ctx.arc(0, 0, 55, -this.specialAngle, -this.specialAngle + Math.PI);
             ctx.stroke();
         }
 
@@ -503,12 +595,12 @@ class Player {
         const legAngle = Math.sin(this.walkCycle) * 0.5;
 
         // 棒人間の描画
-        ctx.strokeStyle = '#38bdf8';
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 4;
         ctx.lineCap = 'round';
 
         // 頭部
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(0, -25, 10, 0, Math.PI * 2);
         ctx.fill();
@@ -530,13 +622,11 @@ class Player {
 
         // 腕部 & 攻撃
         if (this.isAttacking) {
-            // パンチアーム
             ctx.beginPath();
             ctx.moveTo(0, -10);
             ctx.lineTo(dir * 25, -10);
             ctx.stroke();
 
-            // スラッシュ斬撃エフェクト
             ctx.strokeStyle = '#facc15';
             ctx.lineWidth = 3;
             ctx.beginPath();
@@ -560,7 +650,7 @@ class Enemy {
         this.x = x;
         this.y = y;
         this.isBoss = isBoss;
-        this.hp = isBoss ? 6 : 2;
+        this.hp = isBoss ? 8 : 2;
         this.maxHp = this.hp;
         this.speed = isBoss ? 1.8 : 2.2 + Math.random() * 0.8;
         this.radius = isBoss ? 20 : 12;
@@ -581,15 +671,13 @@ class Enemy {
             this.x += (dx / dist) * this.speed;
             this.y += (dy / dist) * this.speed;
         } else {
-            // 近接攻撃
             if (this.attackCooldown <= 0 && !player.isSpecialActive) {
                 player.hp -= this.isBoss ? 2 : 1;
-                this.attackCooldown = 60; // 1秒間隔
+                this.attackCooldown = 60;
                 screenShake = 6;
                 playSound('hit');
                 floatingTexts.push(new FloatingText(player.x, player.y - 20, '-1', '#ef4444'));
 
-                // 痛みの血飛沫風パーティクル
                 for (let i = 0; i < 5; i++) {
                     particles.push(new Particle(
                         player.x, player.y,
@@ -618,19 +706,16 @@ class Enemy {
         ctx.lineWidth = this.isBoss ? 5 : 3;
         ctx.lineCap = 'round';
 
-        // 頭
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(0, -headRadius * 2, headRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // 胴体
         ctx.beginPath();
         ctx.moveTo(0, -headRadius);
         ctx.lineTo(0, headRadius * 1.5);
         ctx.stroke();
 
-        // 手足
         ctx.beginPath();
         ctx.moveTo(0, headRadius * 1.5);
         ctx.lineTo(dir * 10, headRadius * 3);
@@ -643,7 +728,6 @@ class Enemy {
         ctx.lineTo(-dir * 10, headRadius);
         ctx.stroke();
 
-        // ボス用HP表示
         if (this.isBoss) {
             ctx.fillStyle = 'rgba(0,0,0,0.5)';
             ctx.fillRect(-20, -45, 40, 6);
@@ -656,7 +740,8 @@ class Enemy {
 }
 
 // ゲーム状態管理
-let player = new Player(150, 250);
+const MAX_WAVES = 23; // 全23Wave (ウェーブを20増加)
+let player = new Player(150, 250, selectedCharIndex);
 let enemies = [];
 let currentWave = 1;
 let totalEnemiesInWave = 7;
@@ -665,9 +750,9 @@ let gameWon = false;
 
 function spawnWave(wave) {
     enemies = [];
-    totalEnemiesInWave = 5 + wave * 2;
+    totalEnemiesInWave = 4 + wave * 2;
     for (let i = 0; i < totalEnemiesInWave; i++) {
-        const isBoss = (wave % 2 === 0 && i === 0);
+        const isBoss = (wave % 3 === 0 && i === 0) || (wave === MAX_WAVES && i < 3);
         const x = 500 + Math.random() * 260;
         const y = 80 + Math.random() * 380;
         enemies.push(new Enemy(x, y, isBoss));
@@ -687,13 +772,13 @@ function updateGame() {
     if (player.isSpecialActive) {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
-            if (dist < 75) {
-                enemy.hp -= 0.15; // 継続大ダメージ
+            if (dist < 80) {
+                enemy.hp -= 0.2; // 継続大ダメージ
                 enemy.x += (enemy.x - player.x) * 0.1;
                 enemy.y += (enemy.y - player.y) * 0.1;
                 
                 particles.push(new Particle(
-                    enemy.x, enemy.y, '#f59e0b', 3,
+                    enemy.x, enemy.y, player.color, 3,
                     (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
                 ));
             }
@@ -706,10 +791,11 @@ function updateGame() {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - attackX, enemy.y - player.y);
             if (dist < 40) {
-                enemy.hp -= 1;
+                const damage = player.charConfig.name === 'バーサーカー' ? 2 : 1;
+                enemy.hp -= damage;
                 enemy.x += (player.facing === 'right' ? 20 : -20);
                 playSound('hit');
-                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-1', '#facc15'));
+                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, `-${damage}`, '#facc15'));
                 player.attackHasHit = true;
 
                 for (let i = 0; i < 6; i++) {
@@ -726,7 +812,6 @@ function updateGame() {
     enemies.forEach((enemy, index) => {
         enemy.update(player);
         if (enemy.hp <= 0) {
-            // 撃破エフェクト
             for (let i = 0; i < 15; i++) {
                 particles.push(new Particle(
                     enemy.x, enemy.y, enemy.color, 4,
@@ -740,7 +825,7 @@ function updateGame() {
     // 次のWaveチェック
     if (enemies.length === 0) {
         currentWave++;
-        if (currentWave > 3) {
+        if (currentWave > MAX_WAVES) {
             gameWon = true;
             playSound('win');
         } else {
@@ -768,6 +853,7 @@ function updateGame() {
 
     // UI更新
     hpText.innerText = Math.max(0, player.hp);
+    maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
     enemiesDisplay.innerText = enemies.length;
     waveDisplay.innerText = currentWave;
@@ -776,18 +862,19 @@ function updateGame() {
         specialDisplay.innerText = 'READY!';
         specialDisplay.style.color = '#4ade80';
         specialBtn.disabled = false;
+        specialBtn.innerText = `⚡ ${player.charConfig.skillName} (Q)`;
     } else {
         const sec = (player.specialCooldown / 60).toFixed(1);
         specialDisplay.innerText = `冷却中 (${sec}秒)`;
         specialDisplay.style.color = '#9ca3af';
         specialBtn.disabled = true;
+        specialBtn.innerText = `⚡ 冷却中 (${sec}s)`;
     }
 }
 
 function drawGame() {
     ctx.save();
 
-    // 画面シェイク
     if (screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
     }
@@ -810,13 +897,12 @@ function drawGame() {
         ctx.stroke();
     }
 
-    // ゲームオブジェクトの描画
     player.draw(ctx);
     enemies.forEach(enemy => enemy.draw(ctx));
     particles.forEach(p => p.draw(ctx));
     floatingTexts.forEach(ft => ft.draw(ctx));
 
-    // オーバーレイ画面（ゲームオーバー/クリア）
+    // オーバーレイ画面
     if (gameOver) {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -836,11 +922,11 @@ function drawGame() {
         ctx.fillStyle = '#facc15';
         ctx.font = '800 48px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('VICTORY!! 全WAVEクリア!', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillText('🎉 VICTORY!! 全23WAVE達成! 🎉', canvas.width / 2, canvas.height / 2 - 20);
 
         ctx.fillStyle = '#38bdf8';
         ctx.font = '20px sans-serif';
-        ctx.fillText('お見事です！最高の棒人間マスター！', canvas.width / 2, canvas.height / 2 + 30);
+        ctx.fillText('お見事です！全キャラ制覇を目指しましょう！', canvas.width / 2, canvas.height / 2 + 30);
     }
 
     ctx.restore();
@@ -859,7 +945,7 @@ function triggerSpecialMove() {
 
 function restartGame() {
     initAudio();
-    player = new Player(150, 250);
+    player = new Player(150, 250, selectedCharIndex);
     currentWave = 1;
     gameOver = false;
     gameWon = false;
@@ -881,7 +967,6 @@ function copySourceCode() {
     });
 }
 
-// ゲームループ開始
 gameLoop();
 </script>
 </body>
