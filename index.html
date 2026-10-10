@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>棒人間アクションゲーム - 5キャラ＆全23Wave</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,9 +11,18 @@
         * {
             box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
-        body {
+        html, body {
             margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
             background: #0f172a;
             color: #f8fafc;
             font-family: 'M PLUS Rounded 1c', 'Outfit', sans-serif;
@@ -21,13 +30,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding: 15px;
         }
         h1 {
-            margin: 0 0 10px 0;
-            font-size: 26px;
+            margin: 0 0 8px 0;
+            font-size: 24px;
             text-align: center;
             background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
             -webkit-background-clip: text;
@@ -36,8 +42,8 @@
         }
         #char-select-container {
             display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -45,14 +51,14 @@
             background: rgba(30, 41, 59, 0.8);
             border: 2px solid #334155;
             border-radius: 12px;
-            padding: 8px 14px;
+            padding: 6px 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
-            min-width: 120px;
+            min-width: 110px;
         }
         .char-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             border-color: #38bdf8;
             box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
         }
@@ -63,11 +69,11 @@
         }
         .char-name {
             font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 13px;
+            margin-bottom: 2px;
         }
         .char-desc {
-            font-size: 11px;
+            font-size: 10px;
             color: #94a3b8;
         }
 
@@ -84,18 +90,18 @@
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
         #ui {
-            margin-bottom: 12px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-size: 14px;
             font-weight: bold;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
             justify-content: center;
         }
         .info-item {
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(8px);
-            padding: 8px 18px;
+            padding: 6px 14px;
             border-radius: 20px;
             border: 1px solid #334155;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -104,10 +110,10 @@
             gap: 6px;
         }
         .hp-bar-outer {
-            width: 100px;
-            height: 12px;
+            width: 90px;
+            height: 10px;
             background: #334155;
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
             display: inline-block;
             margin-left: 6px;
@@ -120,9 +126,9 @@
             transition: width 0.2s ease;
         }
         .toolbar {
-            margin-top: 15px;
+            margin-top: 10px;
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
@@ -130,8 +136,8 @@
         .copy-btn, .action-btn, .reset-btn {
             color: white;
             border: none;
-            padding: 12px 22px;
-            font-size: 15px;
+            padding: 10px 18px;
+            font-size: 14px;
             font-weight: 800;
             border-radius: 30px;
             cursor: pointer;
@@ -140,7 +146,7 @@
             font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .action-btn {
             background: linear-gradient(135deg, #f59e0b, #ef4444);
@@ -178,22 +184,22 @@
             transform: translateY(0);
         }
         #controls-guide {
-            margin-top: 12px;
-            font-size: 13px;
+            margin-top: 8px;
+            font-size: 12px;
             color: #94a3b8;
             background: rgba(15, 23, 42, 0.6);
-            padding: 6px 16px;
+            padding: 4px 14px;
             border-radius: 12px;
             border: 1px solid #1e293b;
         }
         kbd {
             background: #334155;
             color: #f8fafc;
-            padding: 2px 6px;
+            padding: 2px 5px;
             border-radius: 4px;
             border: 1px solid #475569;
             font-family: inherit;
-            font-size: 12px;
+            font-size: 11px;
         }
         #toast {
             position: fixed;
@@ -257,7 +263,7 @@
     </div>
 
     <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
     </div>
 
     <div class="toolbar">
@@ -369,29 +375,36 @@ const keys = {
     KeyQ: false
 };
 
+// 画面スクロール・バウンスを徹底的に防止
 window.addEventListener('keydown', (e) => {
     initAudio();
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+        e.preventDefault();
+    }
     if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = true;
     if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = true;
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = true;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = true;
-    if (e.code === 'Space') {
-        e.preventDefault();
-        keys.Space = true;
-    }
-    if (e.code === 'KeyQ') {
-        keys.KeyQ = true;
-    }
-});
+    if (e.code === 'Space') keys.Space = true;
+    if (e.code === 'KeyQ') keys.KeyQ = true;
+}, { passive: false });
 
 window.addEventListener('keyup', (e) => {
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+        e.preventDefault();
+    }
     if (e.code === 'ArrowUp' || e.code === 'KeyW') keys.ArrowUp = false;
     if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = false;
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = false;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = false;
     if (e.code === 'Space') keys.Space = false;
     if (e.code === 'KeyQ') keys.KeyQ = false;
-});
+}, { passive: false });
+
+// タッチデバイスでのスワイプスクロール防止
+document.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
 
 // パーティクルシステム
 class Particle {
@@ -555,7 +568,6 @@ class Player {
             this.specialTimer--;
             this.specialAngle += 0.4;
             
-            // バランスキャラの旋風オーラ
             if (this.charConfig.name === 'バランス') {
                 for (let i = 0; i < 3; i++) {
                     const angle = Math.random() * Math.PI * 2;
@@ -571,7 +583,6 @@ class Player {
                     ));
                 }
             }
-            // 【ガーディアン】ダメージなし・回復の聖なるエフェクト
             else if (this.charConfig.name === 'ガーディアン') {
                 for (let i = 0; i < 4; i++) {
                     particles.push(new Particle(
@@ -585,7 +596,6 @@ class Player {
                     ));
                 }
             }
-            // 【ダークマージ】暗黒極大ビームの発射＆敵への継続ダメージ
             else if (this.charConfig.name === 'ダークマージ') {
                 const dir = this.facing === 'right' ? 1 : -1;
                 const beamY = this.y - 10;
@@ -604,7 +614,7 @@ class Player {
                 enemies.forEach(enemy => {
                     const inRange = dir === 1 ? enemy.x >= this.x : enemy.x <= this.x;
                     if (inRange && Math.abs(enemy.y - beamY) < 45) {
-                        enemy.hp -= 0.6; // 強力なビーム継続ダメージ
+                        enemy.hp -= 0.6;
                         enemy.x += dir * 1.5;
                         particles.push(new Particle(
                             enemy.x, enemy.y, '#a855f7', 4,
@@ -693,7 +703,7 @@ class Player {
             const maxX = Math.max(startX, targetX);
             enemies.forEach(enemy => {
                 if (enemy.x >= minX - 30 && enemy.x <= maxX + 30 && Math.abs(enemy.y - startY) < 70) {
-                    enemy.hp -= 12; // モブHP10を一撃粉砕できる威力
+                    enemy.hp -= 12;
                     floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-12 瞬身一閃!', '#facc15'));
                     for (let i = 0; i < 10; i++) {
                         particles.push(new Particle(
@@ -829,7 +839,6 @@ class Enemy {
         this.x = x;
         this.y = y;
         this.isBoss = isBoss;
-        // モブHP = 10, ボスHP = 20
         this.hp = isBoss ? 20 : 10;
         this.maxHp = this.hp;
         this.speed = isBoss ? 1.8 : 2.2 + Math.random() * 0.8;
@@ -908,7 +917,6 @@ class Enemy {
         ctx.lineTo(-dir * 10, headRadius);
         ctx.stroke();
 
-        // 頭上のHPゲージ表示（モブ＆ボス両対応）
         const barWidth = this.isBoss ? 44 : 26;
         const barHeight = this.isBoss ? 6 : 4;
         const barY = this.isBoss ? -45 : -26;
@@ -951,13 +959,11 @@ function updateGame() {
 
     if (screenShake > 0) screenShake--;
 
-    // 飛び道具の更新
     projectiles.forEach((proj, idx) => {
         proj.update(enemies);
         if (proj.life <= 0) projectiles.splice(idx, 1);
     });
 
-    // 必殺技範囲チェック (バランスキャラの旋風攻撃)
     if (player.isSpecialActive && player.charConfig.name === 'バランス') {
         enemies.forEach(enemy => {
             const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
@@ -974,7 +980,6 @@ function updateGame() {
         });
     }
 
-    // 通常攻撃命中チェック
     if (player.isAttacking && !player.attackHasHit) {
         const attackX = player.x + (player.facing === 'right' ? 30 : -30);
         enemies.forEach(enemy => {
@@ -997,7 +1002,6 @@ function updateGame() {
         });
     }
 
-    // 敵の更新と撃破処理
     enemies.forEach((enemy, index) => {
         enemy.update(player);
         if (enemy.hp <= 0) {
@@ -1011,7 +1015,6 @@ function updateGame() {
         }
     });
 
-    // 次のWaveチェック
     if (enemies.length === 0) {
         currentWave++;
         if (currentWave > MAX_WAVES) {
@@ -1029,7 +1032,6 @@ function updateGame() {
         gameOver = true;
     }
 
-    // パーティクル更新
     particles.forEach((p, idx) => {
         p.update();
         if (p.life <= 0) particles.splice(idx, 1);
@@ -1040,7 +1042,6 @@ function updateGame() {
         if (ft.life <= 0) floatingTexts.splice(idx, 1);
     });
 
-    // UI更新
     hpText.innerText = Math.max(0, player.hp);
     maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
@@ -1070,7 +1071,6 @@ function drawGame() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // グリッド背景模様
     ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
     ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 40) {
@@ -1092,7 +1092,6 @@ function drawGame() {
     particles.forEach(p => p.draw(ctx));
     floatingTexts.forEach(ft => ft.draw(ctx));
 
-    // オーバーレイ画面
     if (gameOver) {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
