@@ -2,12 +2,15 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D棒人間アクションゲーム - 5キャラ＆全23Wave</title>
+    <title>3D棒人間アクションゲーム - 5キャラ＆全23Wave (Ver 3.0)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
-    <!-- Three.js (3Dグラフィックスライブラリ) -->
+    <!-- Three.js 3Dエンジン -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -25,7 +28,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            background: #090d16;
+            background: #060913;
             color: #f8fafc;
             font-family: 'M PLUS Rounded 1c', 'Outfit', sans-serif;
             display: flex;
@@ -40,7 +43,7 @@
             background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.25);
+            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
         }
         #char-select-container {
             display: flex;
@@ -64,12 +67,12 @@
         .char-card:hover {
             transform: translateY(-2px);
             border-color: #38bdf8;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
         }
         .char-card.active {
             border-color: #facc15;
             background: rgba(51, 65, 85, 0.95);
-            box-shadow: 0 0 14px rgba(250, 204, 21, 0.45);
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.5);
         }
         .char-name {
             font-weight: bold;
@@ -83,7 +86,7 @@
 
         #game-container {
             position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.85), 0 0 25px rgba(56, 189, 248, 0.25);
             border: 2px solid #334155;
             background-color: #020617;
             border-radius: 12px;
@@ -242,7 +245,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-        /* 3Dゲーム内テキストオーバーレイ */
         #game-overlay {
             position: absolute;
             top: 0;
@@ -256,7 +258,7 @@
             position: absolute;
             font-weight: 800;
             font-size: 14px;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.95);
             transform: translate(-50%, -50%);
             transition: opacity 0.3s ease;
             white-space: nowrap;
@@ -267,11 +269,11 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(15, 23, 42, 0.92);
             border: 2px solid #38bdf8;
             border-radius: 16px;
             padding: 24px 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.85);
             display: none;
             pointer-events: auto;
         }
@@ -525,12 +527,11 @@ function updateFullscreenButton() {
 // Three.js 3D シーン初期化
 // ==========================================
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a1122);
-scene.fog = new THREE.FogExp2(0x0a1122, 0.012);
+scene.background = new THREE.Color(0x080e1c);
+scene.fog = new THREE.FogExp2(0x080e1c, 0.012);
 
 const camera = new THREE.PerspectiveCamera(46, 800 / 480, 0.1, 1000);
-// 見下ろし斜め視点（3Dアクション）
-camera.position.set(0, 40, 36);
+camera.position.set(0, 42, 38);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
@@ -539,11 +540,11 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-// ライト
+// ライティング
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.95);
 dirLight.position.set(25, 45, 30);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 1024;
@@ -556,7 +557,7 @@ dirLight.shadow.camera.top = 30;
 dirLight.shadow.camera.bottom = -30;
 scene.add(dirLight);
 
-// 3Dステージ・アリーナ構築
+// 3Dアリーナ
 const arenaWidth = 68;
 const arenaDepth = 42;
 
@@ -564,7 +565,7 @@ const arenaDepth = 42;
 const floorGeo = new THREE.PlaneGeometry(arenaWidth, arenaDepth);
 const floorMat = new THREE.MeshStandardMaterial({
     color: 0x0f172a,
-    roughness: 0.7,
+    roughness: 0.6,
     metalness: 0.3
 });
 const floorMesh = new THREE.Mesh(floorGeo, floorMat);
@@ -572,17 +573,17 @@ floorMesh.rotation.x = -Math.PI / 2;
 floorMesh.receiveShadow = true;
 scene.add(floorMesh);
 
-// グリッドライン
+// グリッド線
 const gridHelper = new THREE.GridHelper(arenaWidth, 24, 0x38bdf8, 0x1e293b);
 gridHelper.position.y = 0.02;
 scene.add(gridHelper);
 
 // アリーナ外枠ネオンフェンス
-const wallMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 });
+const wallMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 });
 function createNeonWall(x, z, w, d) {
-    const geo = new THREE.BoxGeometry(w, 2.0, d);
+    const geo = new THREE.BoxGeometry(w, 2.2, d);
     const m = new THREE.Mesh(geo, wallMat);
-    m.position.set(x, 1.0, z);
+    m.position.set(x, 1.1, z);
     scene.add(m);
 }
 createNeonWall(0, -arenaDepth/2, arenaWidth, 0.4);
@@ -630,7 +631,7 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
     bodyGroup.add(eyeR);
     bodyGroup.add(eyeL);
 
-    // 左腕・右腕 (肩ピボット)
+    // 左腕・右腕
     const armGeo = new THREE.CylinderGeometry(0.12 * scale, 0.12 * scale, 1.5 * scale, 8);
     armGeo.translate(0, -0.65 * scale, 0);
 
@@ -650,7 +651,7 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
 
     root.add(bodyGroup);
 
-    // 左足・右足 (股ピボット)
+    // 左足・右足
     const legGeo = new THREE.CylinderGeometry(0.13 * scale, 0.13 * scale, 1.8 * scale, 8);
     legGeo.translate(0, -0.85 * scale, 0);
 
@@ -668,12 +669,11 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
     hipR.add(legR);
     root.add(hipR);
 
-    // --- キャラクター専用 3D スキン装飾 ---
+    // スキン装飾
     const ribbonParts = [];
 
     // 1. バランス剣士: 背中の大刀 ＆ なびく青ハチマキ
     if (charIndex === 0) {
-        // 背中の大刀
         const swordBlade = new THREE.Mesh(
             new THREE.BoxGeometry(0.08, 2.6, 0.28),
             new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.8, roughness: 0.2 })
@@ -691,7 +691,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
         swordHilt.rotation.z = 0.55;
         bodyGroup.add(swordHilt);
 
-        // なびく青ハチマキ
         const ribbonMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
         const rib1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 1.2), ribbonMat);
         rib1.position.set(0, 1.45, -0.8);
@@ -725,7 +724,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
         headPlate.position.set(0, 1.5, 0.6);
         bodyGroup.add(headPlate);
 
-        // マフラー
         const scarfMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
         const scarf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 1.6), scarfMat);
         scarf.position.set(0, 0.85, -0.9);
@@ -734,7 +732,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
     }
     // 4. 聖騎士ガーディアン: 左手の聖なる大盾 ＆ 十字バイザー
     else if (charIndex === 3) {
-        // 左手の盾
         const shieldGroup = new THREE.Group();
         const shieldBody = new THREE.Mesh(
             new THREE.CylinderGeometry(0.8, 0.8, 0.15, 16),
@@ -751,7 +748,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
         shieldGroup.position.set(0, -0.8, 0.25);
         shoulderL.add(shieldGroup);
 
-        // バイザー
         const visor = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.15), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
         visor.position.set(0, 1.4, 0.62);
         bodyGroup.add(visor);
@@ -767,7 +763,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
         hatCone.position.set(0, 2.55, 0);
         bodyGroup.add(hatCone);
 
-        // 魔法の杖
         const staffGroup = new THREE.Group();
         const staffPole = new THREE.Mesh(
             new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8),
@@ -786,7 +781,6 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
         shoulderR.add(staffGroup);
     }
 
-    // ボス専用の邪悪な角
     if (isBoss) {
         const bossHornMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
         const hornGeo = new THREE.ConeGeometry(0.25 * scale, 1.2 * scale, 8);
@@ -813,7 +807,7 @@ function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
     };
 }
 
-// 3Dパーティクルシステム
+// 3Dパーティクル
 class Particle3D {
     constructor(pos, colorHex, size = 0.4, velocity = null, life = 25) {
         this.life = life;
@@ -855,7 +849,6 @@ function spawnParticleExplosion(pos, colorHex, count = 12, speed = 0.5) {
     }
 }
 
-// 画面上テキストポップアップ
 function addFloatingText(x3D, y3D, z3D, text, color) {
     const el = document.createElement('div');
     el.className = 'floating-3d-text';
@@ -873,10 +866,10 @@ function addFloatingText(x3D, y3D, z3D, text, color) {
 let floatingTexts = [];
 
 // ==========================================
-// 3D 障害物システム (マグマ、石柱、矢の発射台)
+// 3D 障害物システム
 // ==========================================
 
-// 1. マグマ地帯 (3D円盤＋継続火の粉)
+// 1. マグマ地帯
 class MagmaZone3D {
     constructor(x, z, radius = 5.0) {
         this.x = x;
@@ -899,7 +892,6 @@ class MagmaZone3D {
     update(player) {
         if (this.burnCooldown > 0) this.burnCooldown--;
 
-        // マグマ火の粉
         if (Math.random() < 0.25) {
             const rx = this.x + (Math.random() - 0.5) * (this.radius * 1.4);
             const rz = this.z + (Math.random() - 0.5) * (this.radius * 1.4);
@@ -922,7 +914,7 @@ class MagmaZone3D {
     }
 }
 
-// 2. 邪魔な石柱 (3D円柱＋押し出しコリジョン)
+// 2. 邪魔な石柱
 class PillarObstacle3D {
     constructor(x, z, radius = 3.2, height = 7.0) {
         this.x = x;
@@ -941,7 +933,6 @@ class PillarObstacle3D {
         this.mesh.receiveShadow = true;
         scene.add(this.mesh);
 
-        // 柱の装飾リング
         const ringGeo = new THREE.CylinderGeometry(radius * 1.08, radius * 1.08, 0.6, 16);
         const ringMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.5 });
         const ring = new THREE.Mesh(ringGeo, ringMat);
@@ -949,7 +940,6 @@ class PillarObstacle3D {
         this.mesh.add(ring);
     }
     update(player, enemies) {
-        // プレイヤー押し出し
         const distP = Math.hypot(player.pos.x - this.x, player.pos.z - this.z);
         if (distP < this.radius + 1.2) {
             const angle = Math.atan2(player.pos.z - this.z, player.pos.x - this.x);
@@ -957,7 +947,6 @@ class PillarObstacle3D {
             player.pos.z = this.z + Math.sin(angle) * (this.radius + 1.2);
         }
 
-        // 敵押し出し
         enemies.forEach(e => {
             const distE = Math.hypot(e.pos.x - this.x, e.pos.z - this.z);
             if (distE < this.radius + 1.2) {
@@ -972,12 +961,12 @@ class PillarObstacle3D {
     }
 }
 
-// 3. 矢の発射台 (3Dクロスボウタレット)
+// 3. 矢の発射台
 class ArrowTrap3D {
     constructor(x, z, dirX = 1) {
         this.x = x;
         this.z = z;
-        this.dirX = dirX; // 1: 右向き, -1: 左向き
+        this.dirX = dirX;
         this.cooldown = 140;
 
         this.group = new THREE.Group();
@@ -989,7 +978,6 @@ class ArrowTrap3D {
         base.castShadow = true;
         this.group.add(base);
 
-        // 発射口
         const nozzleGeo = new THREE.CylinderGeometry(0.3, 0.4, 0.8, 8);
         const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
         const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
@@ -1041,7 +1029,6 @@ class ArrowProjectile3D {
         this.mesh.position.x += this.speed;
         this.life--;
 
-        // プレイヤー衝突
         const distP = Math.hypot(player.pos.x - this.mesh.position.x, player.pos.z - this.mesh.position.z);
         if (distP < 1.4) {
             if (player.invincibleTimer <= 0) {
@@ -1054,7 +1041,6 @@ class ArrowProjectile3D {
             return false;
         }
 
-        // 敵誤射ヒット
         for (let e of enemies) {
             const distE = Math.hypot(e.pos.x - this.mesh.position.x, e.pos.z - this.mesh.position.z);
             if (distE < 1.4) {
@@ -1088,7 +1074,6 @@ class ItemDrop3D {
         this.group = new THREE.Group();
         this.group.position.set(x, 22, z);
 
-        // アイテム本体の3D形状
         let color = 0x38bdf8;
         if (type === 'full_heal') {
             color = 0xfacc15;
@@ -1117,7 +1102,6 @@ class ItemDrop3D {
             this.group.add(m);
         }
 
-        // 外周の光るリング
         const ringGeo = new THREE.TorusGeometry(1.2, 0.08, 8, 24);
         ringGeo.rotateX(Math.PI / 2);
         this.ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: color }));
@@ -1161,13 +1145,11 @@ class AxeProjectile3D {
         this.group = new THREE.Group();
         this.group.position.copy(this.pos);
 
-        // 柄
         const hiltGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.2, 8);
         const hiltMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
         const hilt = new THREE.Mesh(hiltGeo, hiltMat);
         this.group.add(hilt);
 
-        // 両刃
         const bladeGeo = new THREE.BoxGeometry(1.6, 0.8, 0.15);
         const bladeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.8, roughness: 0.2 });
         const blade = new THREE.Mesh(bladeGeo, bladeMat);
@@ -1182,7 +1164,6 @@ class AxeProjectile3D {
         this.group.rotation.z += 0.45;
         this.life--;
 
-        // 敵への衝突判定
         enemies.forEach(e => {
             if (!this.hitEnemies.has(e)) {
                 const dist = Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z);
@@ -1222,7 +1203,6 @@ class DarkBeam3D {
         this.beamCore = new THREE.Mesh(beamGeo, beamMat);
         this.mesh.add(this.beamCore);
 
-        // 向き
         const angle = Math.atan2(dir.x, dir.z);
         this.mesh.rotation.y = angle;
 
@@ -1296,12 +1276,10 @@ class Player3D {
     update() {
         if (this.invincibleTimer > 0) this.invincibleTimer--;
 
-        // 必殺技発動中タイマー
         if (this.isSpecialActive) {
             this.specialTimer--;
             if (this.spinAura) this.spinAura.update();
 
-            // ダークマージのビームダメージ判定
             if (this.config.name === '大魔導士ダークマージ' && this.darkBeam) {
                 enemies.forEach(e => {
                     const toEnemy = e.pos.clone().sub(this.pos);
@@ -1318,7 +1296,6 @@ class Player3D {
                 });
             }
 
-            // バランス剣士の範囲ダメージ
             if (this.config.name === 'バランス剣士') {
                 enemies.forEach(e => {
                     const dist = Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z);
@@ -1344,7 +1321,6 @@ class Player3D {
 
         if (this.specialCooldown > 0) this.specialCooldown--;
 
-        // 移動処理
         let moveX = 0;
         let moveZ = 0;
         if (keys.ArrowUp) moveZ -= 1;
@@ -1356,12 +1332,10 @@ class Player3D {
             const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
             this.pos.addScaledVector(moveVec, this.speed);
 
-            // 向きをスムーズに合わせる
             const targetAngle = Math.atan2(moveVec.x, moveVec.z);
             this.stickman.root.rotation.y = targetAngle;
             this.dir.copy(moveVec);
 
-            // 歩行アニメーション
             this.stickman.walkCycle += 0.22;
             const swing = Math.sin(this.stickman.walkCycle) * 0.65;
             this.stickman.hipL.rotation.x = swing;
@@ -1375,20 +1349,17 @@ class Player3D {
             this.stickman.shoulderR.rotation.x *= 0.8;
         }
 
-        // ステージ壁制限
         const padX = arenaWidth / 2 - 2.0;
         const padZ = arenaDepth / 2 - 2.0;
         this.pos.x = THREE.MathUtils.clamp(this.pos.x, -padX, padX);
         this.pos.z = THREE.MathUtils.clamp(this.pos.z, -padZ, padZ);
         this.stickman.root.position.copy(this.pos);
 
-        // リボン・マフラーの揺れ
         if (this.stickman.ribbonParts.length > 0) {
             const wave = Math.sin(Date.now() * 0.01) * 0.2;
             this.stickman.ribbonParts.forEach(r => r.rotation.y = wave);
         }
 
-        // 通常攻撃
         if (keys.Space && !this.isAttacking) {
             this.isAttacking = true;
             this.attackTimer = 14;
@@ -1398,7 +1369,7 @@ class Player3D {
 
         if (this.isAttacking) {
             this.attackTimer--;
-            this.stickman.shoulderR.rotation.x = -Math.PI / 2; // 突き出し
+            this.stickman.shoulderR.rotation.x = -Math.PI / 2;
             if (!this.attackHasHit) {
                 const punchPos = this.pos.clone().addScaledVector(this.dir, 2.0);
                 enemies.forEach(e => {
@@ -1416,7 +1387,6 @@ class Player3D {
             if (this.attackTimer <= 0) this.isAttacking = false;
         }
 
-        // 必殺技キー発動
         if (keys.KeyQ && this.specialCooldown === 0) {
             this.triggerSpecial();
         }
@@ -1433,13 +1403,11 @@ class Player3D {
             addFloatingText(this.pos.x, this.pos.y, this.pos.z, '斧投げ撃破!!', '#ef4444');
         }
         else if (this.config.name === '疾風影忍者') {
-            // 反対側へ瞬身ダッシュ移動
             const targetX = this.dir.x >= 0 ? (arenaWidth / 2 - 3.5) : (-arenaWidth / 2 + 3.5);
             const startX = this.pos.x;
             const minX = Math.min(startX, targetX);
             const maxX = Math.max(startX, targetX);
 
-            // 通り道の敵を一網打尽
             enemies.forEach(e => {
                 if (e.pos.x >= minX - 2.0 && e.pos.x <= maxX + 2.0 && Math.abs(e.pos.z - this.pos.z) < 4.0) {
                     e.hp -= 12;
@@ -1448,14 +1416,13 @@ class Player3D {
                 }
             });
 
-            // 電光残像ライン
             for (let x = minX; x <= maxX; x += 1.5) {
                 particles3D.push(new Particle3D(new THREE.Vector3(x, 1.2, this.pos.z), 0xfacc15, 0.35, new THREE.Vector3(0, 0, 0), 25));
             }
 
             this.pos.x = targetX;
             this.stickman.root.position.copy(this.pos);
-            this.dir.x *= -1; // 向き反転
+            this.dir.x *= -1;
             this.stickman.root.rotation.y = Math.atan2(this.dir.x, this.dir.z);
             addFloatingText(this.pos.x, this.pos.y, this.pos.z, '瞬身一閃!!', '#facc15');
         }
@@ -1473,7 +1440,6 @@ class Player3D {
             addFloatingText(this.pos.x, this.pos.y, this.pos.z, '⚡ 暗黒極大ビーム!! ⚡', '#a855f7');
         }
         else {
-            // バランス剣士
             this.isSpecialActive = true;
             this.specialTimer = 45;
             this.spinAura = new SpinAura3D(this.stickman.root);
@@ -1502,7 +1468,6 @@ class Enemy3D {
         this.stickman.root.position.copy(this.pos);
         scene.add(this.stickman.root);
 
-        // 頭上HPバースプライト
         this.hpCanvas = document.createElement('canvas');
         this.hpCanvas.width = 128;
         this.hpCanvas.height = 24;
@@ -1521,10 +1486,8 @@ class Enemy3D {
     updateHpBar() {
         const ctx = this.hpCtx;
         ctx.clearRect(0, 0, 128, 24);
-        // 背景
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 4, 128, 16);
-        // HPバー
         const ratio = Math.max(0, this.hp / this.maxHp);
         ctx.fillStyle = this.isBoss ? '#ef4444' : '#22c55e';
         ctx.fillRect(2, 6, Math.floor(124 * ratio), 12);
@@ -1541,16 +1504,13 @@ class Enemy3D {
             this.pos.addScaledVector(moveVec, this.speed);
             this.stickman.root.position.copy(this.pos);
 
-            // 向き
             this.stickman.root.rotation.y = Math.atan2(moveVec.x, moveVec.z);
 
-            // 歩行アニメ
             this.stickman.walkCycle += 0.16;
             const swing = Math.sin(this.stickman.walkCycle) * 0.6;
             this.stickman.hipL.rotation.x = swing;
             this.stickman.hipR.rotation.x = -swing;
         } else {
-            // 近接攻撃
             if (this.attackCooldown <= 0 && !player.isSpecialActive) {
                 if (player.invincibleTimer > 0) {
                     this.attackCooldown = 35;
@@ -1600,7 +1560,6 @@ let gameWon = false;
 let screenShake = 0;
 
 function spawnWave(wave) {
-    // 既存の敵や障害物をクリア
     enemies.forEach(e => e.destroy());
     enemies = [];
     magmaZones.forEach(m => m.destroy());
@@ -1620,7 +1579,6 @@ function spawnWave(wave) {
         enemies.push(new Enemy3D(ex, ez, isBoss));
     }
 
-    // 障害物配置
     magmaZones.push(new MagmaZone3D(-10, 8, 4.2));
     magmaZones.push(new MagmaZone3D(12, -8, 4.2));
 
@@ -1631,7 +1589,6 @@ function spawnWave(wave) {
     arrowTraps.push(new ArrowTrap3D(arenaWidth/2 - 2, 0, -1));
 }
 
-// 全画面瞬殺技 (Eキー)
 function triggerUltimateMove() {
     initAudio();
     if (killCount < REQUIRED_KILLS_FOR_ULTIMATE || gameOver || gameWon) return;
@@ -1645,7 +1602,6 @@ function triggerUltimateMove() {
     playSound('special');
     addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 全画面瞬殺一閃!! 💥', '#ec4899');
 
-    // 全ての敵を爆散
     enemies.forEach(e => {
         e.hp = -999;
         spawnParticleExplosion(e.pos, 0xec4899, 16, 0.7);
@@ -1687,15 +1643,18 @@ function updateGame() {
 
     player.update();
 
-    // 画面シェイク
+    // プレイヤーに追従するダイナミック3Dカメラ
+    const targetCamX = player.pos.x * 0.35;
+    const targetCamZ = 36 + player.pos.z * 0.35;
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetCamX, 0.08);
+    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetCamZ, 0.08);
+
     if (screenShake > 0) {
-        camera.position.x = (Math.random() - 0.5) * screenShake * 0.08;
-        camera.position.z = 36 + (Math.random() - 0.5) * screenShake * 0.08;
+        camera.position.x += (Math.random() - 0.5) * screenShake * 0.12;
+        camera.position.z += (Math.random() - 0.5) * screenShake * 0.12;
         screenShake--;
-    } else {
-        camera.position.x = 0;
-        camera.position.z = 36;
     }
+    camera.lookAt(player.pos.x * 0.15, 1.0, player.pos.z * 0.15);
 
     // 障害物更新
     magmaZones.forEach(m => m.update(player));
@@ -1703,7 +1662,7 @@ function updateGame() {
     arrowTraps.forEach(t => t.update(arrowProjectiles));
     arrowProjectiles = arrowProjectiles.filter(a => a.update(player, enemies));
 
-    // アイテム降下・取得判定
+    // アイテム降下
     itemSpawnTimer--;
     if (itemSpawnTimer <= 0) {
         itemSpawnTimer = 380;
@@ -1765,7 +1724,6 @@ function updateGame() {
         }
     }
 
-    // パーティクル更新
     particles3D = particles3D.filter(p => p.update());
 
     // 次のWaveチェック
@@ -1780,7 +1738,7 @@ function updateGame() {
             centerBanner.style.display = 'block';
         } else {
             playSound('win');
-            addFloatingText(0, 0, 0, `WAVE ${currentWave} CLEAR!`, '#38bdf8');
+            addFloatingText(player.pos.x, player.pos.y, player.pos.z, `WAVE ${currentWave} CLEAR!`, '#38bdf8');
             spawnWave(currentWave);
         }
     }
@@ -1794,7 +1752,6 @@ function updateGame() {
         centerBanner.style.display = 'block';
     }
 
-    // UI更新
     hpText.innerText = Math.max(0, player.hp);
     maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
@@ -1826,7 +1783,6 @@ function updateGame() {
         ultimateBtn.innerText = `💥 瞬殺 (${killCount}/${REQUIRED_KILLS_FOR_ULTIMATE})`;
     }
 
-    // 3D浮遊テキストのスクリーン座標変換
     floatingTexts = floatingTexts.filter(item => {
         item.pos.y += 0.05;
         item.life--;
