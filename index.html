@@ -1603,6 +1603,7 @@ function triggerUltimateMove() {
     addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 全画面瞬殺一閃!! 💥', '#ec4899');
 
     enemies.forEach(e => {
+        e.killedByUltimate = true;
         e.hp = -999;
         spawnParticleExplosion(e.pos, 0xec4899, 16, 0.7);
         spawnParticleExplosion(e.pos, 0xfacc15, 8, 0.5);
@@ -1717,7 +1718,9 @@ function updateGame() {
         const e = enemies[i];
         e.update(player);
         if (e.hp <= 0) {
-            killCount++;
+            if (!e.killedByUltimate) {
+                killCount++;
+            }
             spawnParticleExplosion(e.pos, e.isBoss ? 0xef4444 : 0xf43f5e, 14, 0.45);
             e.destroy();
             enemies.splice(i, 1);
