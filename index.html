@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>棒人間アクションゲーム - 5キャラ＆全23Wave</title>
+    <title>3D棒人間アクションゲーム - 5キャラ＆全23Wave</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+    <!-- Three.js (3Dグラフィックスライブラリ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -23,7 +25,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            background: #0f172a;
+            background: #090d16;
             color: #f8fafc;
             font-family: 'M PLUS Rounded 1c', 'Outfit', sans-serif;
             display: flex;
@@ -32,26 +34,28 @@
             justify-content: center;
         }
         h1 {
-            margin: 0 0 6px 0;
-            font-size: 24px;
+            margin: 0 0 4px 0;
+            font-size: 22px;
             text-align: center;
             background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+            text-shadow: 0 4px 20px rgba(56, 189, 248, 0.25);
         }
         #char-select-container {
             display: flex;
             gap: 8px;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 10;
         }
         .char-card {
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(6px);
             border: 2px solid #334155;
-            border-radius: 12px;
-            padding: 5px 10px;
+            border-radius: 10px;
+            padding: 4px 10px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: center;
@@ -64,8 +68,8 @@
         }
         .char-card.active {
             border-color: #facc15;
-            background: rgba(51, 65, 85, 0.9);
-            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+            background: rgba(51, 65, 85, 0.95);
+            box-shadow: 0 0 14px rgba(250, 204, 21, 0.45);
         }
         .char-name {
             font-weight: bold;
@@ -79,29 +83,33 @@
 
         #game-container {
             position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.7), 0 0 20px rgba(56, 189, 248, 0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(56, 189, 248, 0.2);
             border: 2px solid #334155;
             background-color: #020617;
             border-radius: 12px;
             overflow: hidden;
+            width: 800px;
+            height: 480px;
         }
         canvas {
             display: block;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            width: 100%;
+            height: 100%;
         }
         #ui {
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-size: 13px;
             font-weight: bold;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 10;
         }
         .info-item {
-            background: rgba(30, 41, 59, 0.8);
+            background: rgba(30, 41, 59, 0.85);
             backdrop-filter: blur(8px);
-            padding: 5px 12px;
+            padding: 4px 12px;
             border-radius: 20px;
             border: 1px solid #334155;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -126,17 +134,18 @@
             transition: width 0.2s ease;
         }
         .toolbar {
-            margin-top: 8px;
+            margin-top: 6px;
             display: flex;
             gap: 8px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 10;
         }
         .copy-btn, .action-btn, .reset-btn, .fullscreen-btn, .ultimate-btn {
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 7px 15px;
             font-size: 13px;
             font-weight: 800;
             border-radius: 30px;
@@ -156,10 +165,9 @@
             background: linear-gradient(135deg, #a855f7, #ec4899);
             border: 1px solid rgba(236, 72, 153, 0.5);
         }
-        .ultimate-btn:hover:not(:disabled) {
+        .ultimate-btn:hover:not(:disabled), .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.5);
-            filter: brightness(1.1);
+            filter: brightness(1.15);
         }
         .ultimate-btn:disabled, .action-btn:disabled {
             opacity: 0.5;
@@ -197,13 +205,14 @@
             transform: translateY(0);
         }
         #controls-guide {
-            margin-top: 6px;
+            margin-top: 5px;
             font-size: 11px;
             color: #94a3b8;
             background: rgba(15, 23, 42, 0.6);
-            padding: 4px 12px;
+            padding: 3px 12px;
             border-radius: 12px;
             border: 1px solid #1e293b;
+            z-index: 10;
         }
         kbd {
             background: #334155;
@@ -233,11 +242,64 @@
             opacity: 1;
             transform: translateY(0);
         }
+        /* 3Dゲーム内テキストオーバーレイ */
+        #game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .floating-3d-text {
+            position: absolute;
+            font-weight: 800;
+            font-size: 14px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+        #center-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(15, 23, 42, 0.88);
+            border: 2px solid #38bdf8;
+            border-radius: 16px;
+            padding: 24px 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: none;
+            pointer-events: auto;
+        }
+        #center-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 36px;
+        }
+        #center-banner p {
+            margin: 0;
+            font-size: 16px;
+            color: #94a3b8;
+        }
+        #flash-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            background: #f43f5e;
+            transition: opacity 0.1s ease;
+        }
     </style>
 </head>
 <body>
 
-    <h1>⚔️ 棒人間アクションゲーム - 5キャラ＆全23Wave ⚔️</h1>
+    <h1>⚔️ 3D棒人間アクションゲーム - 5キャラ＆全23Wave ⚔️</h1>
 
     <!-- キャラクター選択UI -->
     <div id="char-select-container">
@@ -279,7 +341,13 @@
     </div>
 
     <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="480"></canvas>
+        <canvas id="gameCanvas"></canvas>
+        <div id="game-overlay"></div>
+        <div id="flash-overlay"></div>
+        <div id="center-banner">
+            <h2 id="banner-title">GAME OVER</h2>
+            <p id="banner-desc">「リセット」ボタンで再挑戦できます</p>
+        </div>
     </div>
 
     <div class="toolbar">
@@ -291,7 +359,7 @@
     </div>
 
     <div id="controls-guide">
-        🎮 <b>操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 全画面瞬殺
+        🎮 <b>3D操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 3D移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 全画面瞬殺
     </div>
 
     <div id="toast">コードをコピーしました！</div>
@@ -335,7 +403,7 @@ function playSound(type) {
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(200, now);
             osc.frequency.linearRampToValueAtTime(600, now + 0.4);
-            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.setValueAtTime(0.35, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
             osc.start(now);
             osc.stop(now + 0.5);
@@ -353,7 +421,11 @@ function playSound(type) {
 }
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const gameOverlay = document.getElementById('game-overlay');
+const flashOverlay = document.getElementById('flash-overlay');
+const centerBanner = document.getElementById('center-banner');
+const bannerTitle = document.getElementById('banner-title');
+const bannerDesc = document.getElementById('banner-desc');
 
 const hpText = document.getElementById('hp-text');
 const maxHpText = document.getElementById('max-hp-text');
@@ -367,11 +439,11 @@ const ultimateBtn = document.getElementById('ultimateBtn');
 
 // 5体のキャラクターデータ
 const CHARACTER_TYPES = [
-    { name: 'バランス剣士', color: '#38bdf8', maxHp: 10, speed: 4.5, skillName: '必殺旋風斬り', skillCost: 180 },
-    { name: 'バイキング重戦士', color: '#ef4444', maxHp: 16, speed: 3.8, skillName: '斧投げ撃破', skillCost: 160 },
-    { name: '疾風影忍者', color: '#facc15', maxHp: 8, speed: 6.2, skillName: '瞬身一閃(対岸突撃)', skillCost: 150 },
-    { name: '聖騎士ガーディアン', color: '#22c55e', maxHp: 20, speed: 3.5, skillName: '聖なる祈り(回復)', skillCost: 200 },
-    { name: '大魔導士ダークマージ', color: '#a855f7', maxHp: 9, speed: 4.8, skillName: '暗黒極大ビーム', skillCost: 180 }
+    { name: 'バランス剣士', color: 0x38bdf8, maxHp: 10, speed: 0.38, skillName: '必殺旋風斬り', skillCost: 180 },
+    { name: 'バイキング重戦士', color: 0xef4444, maxHp: 16, speed: 0.32, skillName: '斧投げ撃破', skillCost: 160 },
+    { name: '疾風影忍者', color: 0xfacc15, maxHp: 8, speed: 0.50, skillName: '瞬身一閃(対岸突撃)', skillCost: 150 },
+    { name: '聖騎士ガーディアン', color: 0x22c55e, maxHp: 20, speed: 0.30, skillName: '聖なる祈り(回復)', skillCost: 200 },
+    { name: '大魔導士ダークマージ', color: 0xa855f7, maxHp: 9, speed: 0.40, skillName: '暗黒極大ビーム', skillCost: 180 }
 ];
 
 let selectedCharIndex = 0;
@@ -392,8 +464,7 @@ const keys = {
     ArrowLeft: false,
     ArrowRight: false,
     Space: false,
-    KeyQ: false,
-    KeyE: false
+    KeyQ: false
 };
 
 window.addEventListener('keydown', (e) => {
@@ -407,9 +478,7 @@ window.addEventListener('keydown', (e) => {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = true;
     if (e.code === 'Space') keys.Space = true;
     if (e.code === 'KeyQ') keys.KeyQ = true;
-    if (e.code === 'KeyE') {
-        triggerUltimateMove();
-    }
+    if (e.code === 'KeyE') triggerUltimateMove();
 }, { passive: false });
 
 window.addEventListener('keyup', (e) => {
@@ -432,17 +501,11 @@ function toggleFullscreen() {
     initAudio();
     const docEl = document.documentElement;
     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        if (docEl.requestFullscreen) {
-            docEl.requestFullscreen();
-        } else if (docEl.webkitRequestFullscreen) {
-            docEl.webkitRequestFullscreen();
-        }
+        if (docEl.requestFullscreen) docEl.requestFullscreen();
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
     } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
     }
 }
 
@@ -458,661 +521,902 @@ function updateFullscreenButton() {
     }
 }
 
-// パーティクルシステム
-class Particle {
-    constructor(x, y, color, size, speedX, speedY, life) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.size = size;
-        this.speedX = speedX;
-        this.speedY = speedY;
+// ==========================================
+// Three.js 3D シーン初期化
+// ==========================================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a1122);
+scene.fog = new THREE.FogExp2(0x0a1122, 0.012);
+
+const camera = new THREE.PerspectiveCamera(46, 800 / 480, 0.1, 1000);
+// 見下ろし斜め視点（3Dアクション）
+camera.position.set(0, 40, 36);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+renderer.setSize(800, 480);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+// ライト
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+dirLight.position.set(25, 45, 30);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 1024;
+dirLight.shadow.mapSize.height = 1024;
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 150;
+dirLight.shadow.camera.left = -40;
+dirLight.shadow.camera.right = 40;
+dirLight.shadow.camera.top = 30;
+dirLight.shadow.camera.bottom = -30;
+scene.add(dirLight);
+
+// 3Dステージ・アリーナ構築
+const arenaWidth = 68;
+const arenaDepth = 42;
+
+// 床
+const floorGeo = new THREE.PlaneGeometry(arenaWidth, arenaDepth);
+const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0f172a,
+    roughness: 0.7,
+    metalness: 0.3
+});
+const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+floorMesh.rotation.x = -Math.PI / 2;
+floorMesh.receiveShadow = true;
+scene.add(floorMesh);
+
+// グリッドライン
+const gridHelper = new THREE.GridHelper(arenaWidth, 24, 0x38bdf8, 0x1e293b);
+gridHelper.position.y = 0.02;
+scene.add(gridHelper);
+
+// アリーナ外枠ネオンフェンス
+const wallMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 });
+function createNeonWall(x, z, w, d) {
+    const geo = new THREE.BoxGeometry(w, 2.0, d);
+    const m = new THREE.Mesh(geo, wallMat);
+    m.position.set(x, 1.0, z);
+    scene.add(m);
+}
+createNeonWall(0, -arenaDepth/2, arenaWidth, 0.4);
+createNeonWall(0, arenaDepth/2, arenaWidth, 0.4);
+createNeonWall(-arenaWidth/2, 0, 0.4, arenaDepth);
+createNeonWall(arenaWidth/2, 0, 0.4, arenaDepth);
+
+// ==========================================
+// 3D 棒人間キャラクターモデル生成関数
+// ==========================================
+function create3DStickman(colorHex, charIndex = -1, isBoss = false) {
+    const root = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        roughness: 0.3,
+        metalness: 0.2
+    });
+
+    const scale = isBoss ? 1.7 : 1.0;
+
+    // 胴体グループ
+    const bodyGroup = new THREE.Group();
+    bodyGroup.position.y = 1.8 * scale;
+
+    // 胴体シリンダー
+    const torsoGeo = new THREE.CylinderGeometry(0.18 * scale, 0.18 * scale, 1.8 * scale, 12);
+    const torso = new THREE.Mesh(torsoGeo, mat);
+    torso.castShadow = true;
+    bodyGroup.add(torso);
+
+    // 頭部
+    const headGeo = new THREE.SphereGeometry(0.65 * scale, 16, 16);
+    const head = new THREE.Mesh(headGeo, mat);
+    head.position.y = 1.35 * scale;
+    head.castShadow = true;
+    bodyGroup.add(head);
+
+    // 前方を向く目
+    const eyeMat = new THREE.MeshBasicMaterial({ color: isBoss ? 0xff0000 : 0xffffff });
+    const eyeGeo = new THREE.SphereGeometry(0.12 * scale, 8, 8);
+    const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+    eyeR.position.set(0.22 * scale, 1.4 * scale, 0.55 * scale);
+    const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+    eyeL.position.set(-0.22 * scale, 1.4 * scale, 0.55 * scale);
+    bodyGroup.add(eyeR);
+    bodyGroup.add(eyeL);
+
+    // 左腕・右腕 (肩ピボット)
+    const armGeo = new THREE.CylinderGeometry(0.12 * scale, 0.12 * scale, 1.5 * scale, 8);
+    armGeo.translate(0, -0.65 * scale, 0);
+
+    const shoulderL = new THREE.Group();
+    shoulderL.position.set(-0.5 * scale, 0.7 * scale, 0);
+    const armL = new THREE.Mesh(armGeo, mat);
+    armL.castShadow = true;
+    shoulderL.add(armL);
+    bodyGroup.add(shoulderL);
+
+    const shoulderR = new THREE.Group();
+    shoulderR.position.set(0.5 * scale, 0.7 * scale, 0);
+    const armR = new THREE.Mesh(armGeo, mat);
+    armR.castShadow = true;
+    shoulderR.add(armR);
+    bodyGroup.add(shoulderR);
+
+    root.add(bodyGroup);
+
+    // 左足・右足 (股ピボット)
+    const legGeo = new THREE.CylinderGeometry(0.13 * scale, 0.13 * scale, 1.8 * scale, 8);
+    legGeo.translate(0, -0.85 * scale, 0);
+
+    const hipL = new THREE.Group();
+    hipL.position.set(-0.3 * scale, 1.1 * scale, 0);
+    const legL = new THREE.Mesh(legGeo, mat);
+    legL.castShadow = true;
+    hipL.add(legL);
+    root.add(hipL);
+
+    const hipR = new THREE.Group();
+    hipR.position.set(0.3 * scale, 1.1 * scale, 0);
+    const legR = new THREE.Mesh(legGeo, mat);
+    legR.castShadow = true;
+    hipR.add(legR);
+    root.add(hipR);
+
+    // --- キャラクター専用 3D スキン装飾 ---
+    const ribbonParts = [];
+
+    // 1. バランス剣士: 背中の大刀 ＆ なびく青ハチマキ
+    if (charIndex === 0) {
+        // 背中の大刀
+        const swordBlade = new THREE.Mesh(
+            new THREE.BoxGeometry(0.08, 2.6, 0.28),
+            new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.8, roughness: 0.2 })
+        );
+        swordBlade.position.set(-0.35, 0.4, -0.35);
+        swordBlade.rotation.z = 0.55;
+        swordBlade.castShadow = true;
+        bodyGroup.add(swordBlade);
+
+        const swordHilt = new THREE.Mesh(
+            new THREE.BoxGeometry(0.12, 0.7, 0.16),
+            new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.5 })
+        );
+        swordHilt.position.set(-0.95, -0.7, -0.35);
+        swordHilt.rotation.z = 0.55;
+        bodyGroup.add(swordHilt);
+
+        // なびく青ハチマキ
+        const ribbonMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+        const rib1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 1.2), ribbonMat);
+        rib1.position.set(0, 1.45, -0.8);
+        bodyGroup.add(rib1);
+        ribbonParts.push(rib1);
+    }
+    // 2. バイキング重戦士: 角付き兜 ＆ 黄金胸当て
+    else if (charIndex === 1) {
+        const hornMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3 });
+        const hornGeo = new THREE.ConeGeometry(0.2, 0.9, 8);
+        const hornL = new THREE.Mesh(hornGeo, hornMat);
+        hornL.position.set(-0.6, 1.8, 0);
+        hornL.rotation.z = 0.5;
+        bodyGroup.add(hornL);
+
+        const hornR = new THREE.Mesh(hornGeo, hornMat);
+        hornR.position.set(0.6, 1.8, 0);
+        hornR.rotation.z = -0.5;
+        bodyGroup.add(hornR);
+
+        const armorMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.7, roughness: 0.3 });
+        const chest = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.95, 0.65), armorMat);
+        chest.position.set(0, 0.1, 0);
+        chest.castShadow = true;
+        bodyGroup.add(chest);
+    }
+    // 3. 疾風影忍者: 額当て ＆ なびく黄色マフラー
+    else if (charIndex === 2) {
+        const bandMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8 });
+        const headPlate = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.22, 0.2), bandMat);
+        headPlate.position.set(0, 1.5, 0.6);
+        bodyGroup.add(headPlate);
+
+        // マフラー
+        const scarfMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+        const scarf = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 1.6), scarfMat);
+        scarf.position.set(0, 0.85, -0.9);
+        bodyGroup.add(scarf);
+        ribbonParts.push(scarf);
+    }
+    // 4. 聖騎士ガーディアン: 左手の聖なる大盾 ＆ 十字バイザー
+    else if (charIndex === 3) {
+        // 左手の盾
+        const shieldGroup = new THREE.Group();
+        const shieldBody = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.8, 0.8, 0.15, 16),
+            new THREE.MeshStandardMaterial({ color: 0x22c55e, metalness: 0.3, roughness: 0.4 })
+        );
+        shieldBody.rotation.x = Math.PI / 2;
+        shieldGroup.add(shieldBody);
+
+        const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 0.18), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+        const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.1, 0.18), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+        shieldGroup.add(crossH);
+        shieldGroup.add(crossV);
+
+        shieldGroup.position.set(0, -0.8, 0.25);
+        shoulderL.add(shieldGroup);
+
+        // バイザー
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.15), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+        visor.position.set(0, 1.4, 0.62);
+        bodyGroup.add(visor);
+    }
+    // 5. 大魔導士ダークマージ: とんがり帽子 ＆ 水晶の魔法杖
+    else if (charIndex === 4) {
+        const hatMat = new THREE.MeshStandardMaterial({ color: 0x6b21a8, roughness: 0.5 });
+        const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.08, 16), hatMat);
+        hatBrim.position.set(0, 1.75, 0);
+        bodyGroup.add(hatBrim);
+
+        const hatCone = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.6, 16), hatMat);
+        hatCone.position.set(0, 2.55, 0);
+        bodyGroup.add(hatCone);
+
+        // 魔法の杖
+        const staffGroup = new THREE.Group();
+        const staffPole = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8),
+            new THREE.MeshStandardMaterial({ color: 0xe9d5ff, roughness: 0.3 })
+        );
+        staffGroup.add(staffPole);
+
+        const crystal = new THREE.Mesh(
+            new THREE.SphereGeometry(0.28, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xc084fc })
+        );
+        crystal.position.y = 1.35;
+        staffGroup.add(crystal);
+
+        staffGroup.position.set(0, -0.6, 0.3);
+        shoulderR.add(staffGroup);
+    }
+
+    // ボス専用の邪悪な角
+    if (isBoss) {
+        const bossHornMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        const hornGeo = new THREE.ConeGeometry(0.25 * scale, 1.2 * scale, 8);
+        const hornL = new THREE.Mesh(hornGeo, bossHornMat);
+        hornL.position.set(-0.5 * scale, 1.8 * scale, 0);
+        hornL.rotation.z = 0.6;
+        bodyGroup.add(hornL);
+
+        const hornR = new THREE.Mesh(hornGeo, bossHornMat);
+        hornR.position.set(0.5 * scale, 1.8 * scale, 0);
+        hornR.rotation.z = -0.6;
+        bodyGroup.add(hornR);
+    }
+
+    return {
+        root,
+        bodyGroup,
+        shoulderL,
+        shoulderR,
+        hipL,
+        hipR,
+        ribbonParts,
+        walkCycle: 0
+    };
+}
+
+// 3Dパーティクルシステム
+class Particle3D {
+    constructor(pos, colorHex, size = 0.4, velocity = null, life = 25) {
         this.life = life;
         this.maxLife = life;
+        const geo = new THREE.SphereGeometry(size, 6, 6);
+        const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true });
+        this.mesh = new THREE.Mesh(geo, mat);
+        this.mesh.position.copy(pos);
+        this.vel = velocity || new THREE.Vector3(
+            (Math.random() - 0.5) * 0.4,
+            Math.random() * 0.3,
+            (Math.random() - 0.5) * 0.4
+        );
+        scene.add(this.mesh);
     }
     update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        this.mesh.position.add(this.vel);
         this.life--;
+        this.mesh.material.opacity = Math.max(0, this.life / this.maxLife);
+        if (this.life <= 0) {
+            scene.remove(this.mesh);
+            this.mesh.geometry.dispose();
+            this.mesh.material.dispose();
+            return false;
+        }
+        return true;
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+}
+let particles3D = [];
+
+function spawnParticleExplosion(pos, colorHex, count = 12, speed = 0.5) {
+    for (let i = 0; i < count; i++) {
+        const v = new THREE.Vector3(
+            (Math.random() - 0.5) * speed,
+            Math.random() * speed * 0.8,
+            (Math.random() - 0.5) * speed
+        );
+        particles3D.push(new Particle3D(pos, colorHex, 0.35, v, 20 + Math.random() * 15));
     }
 }
 
-// --- ステージ障害物システム ---
+// 画面上テキストポップアップ
+function addFloatingText(x3D, y3D, z3D, text, color) {
+    const el = document.createElement('div');
+    el.className = 'floating-3d-text';
+    el.innerText = text;
+    el.style.color = color;
+    gameOverlay.appendChild(el);
 
-// 1. マグマ地帯 (乗ると継続ダメージ)
-class MagmaZone {
-    constructor(x, y, radius = 35) {
+    const textObj = {
+        el,
+        pos: new THREE.Vector3(x3D, y3D + 2.5, z3D),
+        life: 40
+    };
+    floatingTexts.push(textObj);
+}
+let floatingTexts = [];
+
+// ==========================================
+// 3D 障害物システム (マグマ、石柱、矢の発射台)
+// ==========================================
+
+// 1. マグマ地帯 (3D円盤＋継続火の粉)
+class MagmaZone3D {
+    constructor(x, z, radius = 5.0) {
         this.x = x;
-        this.y = y;
+        this.z = z;
         this.radius = radius;
         this.burnCooldown = 0;
+
+        const geo = new THREE.CylinderGeometry(radius, radius, 0.1, 24);
+        const mat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+        this.mesh = new THREE.Mesh(geo, mat);
+        this.mesh.position.set(x, 0.05, z);
+        scene.add(this.mesh);
+
+        const innerGeo = new THREE.CylinderGeometry(radius * 0.7, radius * 0.7, 0.12, 24);
+        const innerMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+        const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+        innerMesh.position.set(0, 0.01, 0);
+        this.mesh.add(innerMesh);
     }
     update(player) {
         if (this.burnCooldown > 0) this.burnCooldown--;
 
-        // マグマ火の粉パーティクル
-        if (Math.random() < 0.3) {
-            particles.push(new Particle(
-                this.x + (Math.random() - 0.5) * (this.radius * 1.5),
-                this.y + (Math.random() - 0.5) * (this.radius * 1.5),
-                '#ef4444', 3, (Math.random() - 0.5) * 2, -1 - Math.random() * 2, 18
-            ));
+        // マグマ火の粉
+        if (Math.random() < 0.25) {
+            const rx = this.x + (Math.random() - 0.5) * (this.radius * 1.4);
+            const rz = this.z + (Math.random() - 0.5) * (this.radius * 1.4);
+            particles3D.push(new Particle3D(new THREE.Vector3(rx, 0.2, rz), 0xf97316, 0.2, new THREE.Vector3(0, 0.15, 0), 16));
         }
 
-        // プレイヤーダメージチェック
-        const dist = Math.hypot(player.x - this.x, player.y - this.y);
-        if (dist < this.radius + player.radius) {
+        const dist = Math.hypot(player.pos.x - this.x, player.pos.z - this.z);
+        if (dist < this.radius + 1.2) {
             if (this.burnCooldown <= 0 && player.invincibleTimer <= 0) {
                 player.hp -= 1;
-                this.burnCooldown = 40; // 0.6秒ごとにダメージ
-                screenShake = 5;
+                this.burnCooldown = 40;
+                screenShake = 6;
                 playSound('hit');
-                floatingTexts.push(new FloatingText(player.x, player.y - 20, '🔥 マグマ焦げ! -1', '#ef4444'));
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '🔥 マグマ焦げ! -1', '#ef4444');
             }
         }
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        // 赤熱マグマの池
-        const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, this.radius);
-        grad.addColorStop(0, '#facc15');
-        grad.addColorStop(0.5, '#f97316');
-        grad.addColorStop(1, '#dc2626');
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.mesh);
     }
 }
 
-// 2. 石柱障害物 (進入不可・移動をブロック)
-class PillarObstacle {
-    constructor(x, y, radius = 24) {
+// 2. 邪魔な石柱 (3D円柱＋押し出しコリジョン)
+class PillarObstacle3D {
+    constructor(x, z, radius = 3.2, height = 7.0) {
         this.x = x;
-        this.y = y;
+        this.z = z;
         this.radius = radius;
+
+        const geo = new THREE.CylinderGeometry(radius, radius, height, 16);
+        const mat = new THREE.MeshStandardMaterial({
+            color: 0x475569,
+            roughness: 0.8,
+            metalness: 0.2
+        });
+        this.mesh = new THREE.Mesh(geo, mat);
+        this.mesh.position.set(x, height / 2, z);
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+        scene.add(this.mesh);
+
+        // 柱の装飾リング
+        const ringGeo = new THREE.CylinderGeometry(radius * 1.08, radius * 1.08, 0.6, 16);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.5 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.y = 0;
+        this.mesh.add(ring);
     }
     update(player, enemies) {
-        // プレイヤーの押し出し押し返し判定
-        const distP = Math.hypot(player.x - this.x, player.y - this.y);
-        if (distP < this.radius + player.radius) {
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            player.x = this.x + Math.cos(angle) * (this.radius + player.radius);
-            player.y = this.y + Math.sin(angle) * (this.radius + player.radius);
+        // プレイヤー押し出し
+        const distP = Math.hypot(player.pos.x - this.x, player.pos.z - this.z);
+        if (distP < this.radius + 1.2) {
+            const angle = Math.atan2(player.pos.z - this.z, player.pos.x - this.x);
+            player.pos.x = this.x + Math.cos(angle) * (this.radius + 1.2);
+            player.pos.z = this.z + Math.sin(angle) * (this.radius + 1.2);
         }
 
-        // 敵の押し出し判定
-        enemies.forEach(enemy => {
-            const distE = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-            if (distE < this.radius + enemy.radius) {
-                const angle = Math.atan2(enemy.y - this.y, enemy.x - this.x);
-                enemy.x = this.x + Math.cos(angle) * (this.radius + enemy.radius);
-                enemy.y = this.y + Math.sin(angle) * (this.radius + enemy.radius);
+        // 敵押し出し
+        enemies.forEach(e => {
+            const distE = Math.hypot(e.pos.x - this.x, e.pos.z - this.z);
+            if (distE < this.radius + 1.2) {
+                const angle = Math.atan2(e.pos.z - this.z, e.pos.x - this.x);
+                e.pos.x = this.x + Math.cos(angle) * (this.radius + 1.2);
+                e.pos.z = this.z + Math.sin(angle) * (this.radius + 1.2);
             }
         });
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        // 影
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.beginPath();
-        ctx.ellipse(0, this.radius - 2, this.radius, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 3D六角形柱
-        ctx.fillStyle = '#475569';
-        ctx.strokeStyle = '#94a3b8';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 柱の模様
-        ctx.fillStyle = '#334155';
-        ctx.beginPath();
-        ctx.arc(-4, -4, this.radius * 0.6, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.mesh);
     }
 }
 
-// 3. 矢の発射台 (定期的に矢を発射)
-class ArrowTrap {
-    constructor(x, y, facingLeft = true) {
+// 3. 矢の発射台 (3Dクロスボウタレット)
+class ArrowTrap3D {
+    constructor(x, z, dirX = 1) {
         this.x = x;
-        this.y = y;
-        this.facingLeft = facingLeft;
-        this.cooldown = 150; // 2.5秒ごとに矢発射
+        this.z = z;
+        this.dirX = dirX; // 1: 右向き, -1: 左向き
+        this.cooldown = 140;
+
+        this.group = new THREE.Group();
+        this.group.position.set(x, 1.0, z);
+
+        const baseGeo = new THREE.BoxGeometry(2.4, 2.0, 2.4);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+        const base = new THREE.Mesh(baseGeo, baseMat);
+        base.castShadow = true;
+        this.group.add(base);
+
+        // 発射口
+        const nozzleGeo = new THREE.CylinderGeometry(0.3, 0.4, 0.8, 8);
+        const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+        const nozzle = new THREE.Mesh(nozzleGeo, nozzleMat);
+        nozzle.rotation.z = Math.PI / 2 * dirX;
+        nozzle.position.set(dirX * 1.3, 0.3, 0);
+        this.group.add(nozzle);
+
+        scene.add(this.group);
     }
     update(arrowProjectiles) {
         this.cooldown--;
         if (this.cooldown <= 0) {
-            this.cooldown = 180; // 3秒間隔
-            arrowProjectiles.push(new ArrowProjectile(this.x, this.y, this.facingLeft));
+            this.cooldown = 160;
+            arrowProjectiles.push(new ArrowProjectile3D(this.x + this.dirX * 1.8, this.z, this.dirX));
             playSound('punch');
         }
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        const dir = this.facingLeft ? -1 : 1;
-
-        // 台座
-        ctx.fillStyle = '#78350f';
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2;
-        ctx.fillRect(-15, -15, 30, 30);
-        ctx.strokeRect(-15, -15, 30, 30);
-
-        // 弓矢の銃口
-        ctx.fillStyle = '#334155';
-        ctx.beginPath();
-        ctx.arc(dir * 12, 0, 7, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.group);
     }
 }
 
-// 発射された矢
-class ArrowProjectile {
-    constructor(x, y, facingLeft) {
-        this.x = x;
-        this.y = y;
-        this.speedX = facingLeft ? -7 : 7;
-        this.radius = 12;
-        this.life = 150;
+// 3D 飛翔矢
+class ArrowProjectile3D {
+    constructor(x, z, dirX) {
+        this.dirX = dirX;
+        this.speed = 0.65 * dirX;
+        this.life = 140;
+
+        this.mesh = new THREE.Group();
+        this.mesh.position.set(x, 1.2, z);
+
+        const shaftGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.8, 8);
+        shaftGeo.rotateZ(Math.PI / 2);
+        const shaftMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b });
+        const shaft = new THREE.Mesh(shaftGeo, shaftMat);
+        this.mesh.add(shaft);
+
+        const tipGeo = new THREE.ConeGeometry(0.2, 0.4, 6);
+        tipGeo.rotateZ(-Math.PI / 2 * dirX);
+        const tipMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.8 });
+        const tip = new THREE.Mesh(tipGeo, tipMat);
+        tip.position.x = dirX * 1.0;
+        this.mesh.add(tip);
+
+        scene.add(this.mesh);
     }
     update(player, enemies) {
-        this.x += this.speedX;
+        this.mesh.position.x += this.speed;
         this.life--;
 
-        // プレイヤー直撃判定
-        const dist = Math.hypot(player.x - this.x, player.y - this.y);
-        if (dist < this.radius + player.radius) {
+        // プレイヤー衝突
+        const distP = Math.hypot(player.pos.x - this.mesh.position.x, player.pos.z - this.mesh.position.z);
+        if (distP < 1.4) {
             if (player.invincibleTimer <= 0) {
                 player.hp -= 1;
                 screenShake = 6;
                 playSound('hit');
-                floatingTexts.push(new FloatingText(player.x, player.y - 20, '🏹 矢が直撃! -1', '#ef4444'));
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '🏹 矢が直撃! -1', '#ef4444');
             }
-            this.life = 0; // 命中で消滅
+            this.destroy();
+            return false;
         }
 
-        // 敵への誤射ヒット判定
-        enemies.forEach(enemy => {
-            const distE = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-            if (distE < this.radius + enemy.radius) {
-                enemy.hp -= 2;
-                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-2 矢被弾', '#facc15'));
-                this.life = 0;
+        // 敵誤射ヒット
+        for (let e of enemies) {
+            const distE = Math.hypot(e.pos.x - this.mesh.position.x, e.pos.z - this.mesh.position.z);
+            if (distE < 1.4) {
+                e.hp -= 2;
+                addFloatingText(e.pos.x, e.pos.y, e.pos.z, '-2 矢被弾', '#facc15');
+                this.destroy();
+                return false;
             }
-        });
+        }
+
+        if (this.life <= 0) {
+            this.destroy();
+            return false;
+        }
+        return true;
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        const angle = this.speedX < 0 ? Math.PI : 0;
-        ctx.rotate(angle);
-
-        // 矢の描画
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(-12, 0);
-        ctx.lineTo(10, 0);
-        ctx.stroke();
-
-        // 矢尻
-        ctx.fillStyle = '#cbd5e1';
-        ctx.beginPath();
-        ctx.moveTo(14, 0);
-        ctx.lineTo(7, -5);
-        ctx.lineTo(7, 5);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.mesh);
     }
 }
 
-// お助け・トラップアイテムクラス
-class ItemDrop {
-    constructor(x, type) {
-        this.x = x;
-        this.y = -30;
-        this.speedY = 1.3 + Math.random() * 0.5;
+// ==========================================
+// 3D お助け・トラップアイテム
+// ==========================================
+class ItemDrop3D {
+    constructor(x, z, type) {
         this.type = type;
-        this.radius = 20;
-        this.pulseAngle = 0;
+        this.speedY = 0.16;
         this.life = 600;
+
+        this.group = new THREE.Group();
+        this.group.position.set(x, 22, z);
+
+        // アイテム本体の3D形状
+        let color = 0x38bdf8;
+        if (type === 'full_heal') {
+            color = 0xfacc15;
+            const heartGeo = new THREE.DodecahedronGeometry(0.85);
+            const m = new THREE.Mesh(heartGeo, new THREE.MeshStandardMaterial({ color: color, roughness: 0.2 }));
+            this.group.add(m);
+        } else if (type === 'invincible') {
+            color = 0x38bdf8;
+            const shieldGeo = new THREE.OctahedronGeometry(0.9);
+            const m = new THREE.Mesh(shieldGeo, new THREE.MeshStandardMaterial({ color: color, metalness: 0.8 }));
+            this.group.add(m);
+        } else if (type === 'half_heal') {
+            color = 0x22c55e;
+            const bottleGeo = new THREE.CylinderGeometry(0.45, 0.65, 1.2, 12);
+            const m = new THREE.Mesh(bottleGeo, new THREE.MeshStandardMaterial({ color: color, roughness: 0.3 }));
+            this.group.add(m);
+        } else if (type === 'enemy_spawner') {
+            color = 0xa855f7;
+            const skullGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+            const m = new THREE.Mesh(skullGeo, new THREE.MeshStandardMaterial({ color: color, roughness: 0.4 }));
+            this.group.add(m);
+        } else if (type === 'gourmet_spyzer') {
+            color = 0xf97316;
+            const bottleGeo = new THREE.BoxGeometry(0.7, 1.3, 0.7);
+            const m = new THREE.Mesh(bottleGeo, new THREE.MeshStandardMaterial({ color: color, roughness: 0.3 }));
+            this.group.add(m);
+        }
+
+        // 外周の光るリング
+        const ringGeo = new THREE.TorusGeometry(1.2, 0.08, 8, 24);
+        ringGeo.rotateX(Math.PI / 2);
+        this.ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: color }));
+        this.group.add(this.ring);
+
+        scene.add(this.group);
     }
-
     update() {
-        this.y += this.speedY;
-        this.pulseAngle += 0.05;
-
-        if (this.y > canvas.height - 40) {
-            this.y = canvas.height - 40;
-            this.speedY = 0;
+        if (this.group.position.y > 1.2) {
+            this.group.position.y -= this.speedY;
+        } else {
+            this.group.position.y = 1.2 + Math.sin(Date.now() * 0.005) * 0.2;
             this.life--;
         }
 
-        if (Math.random() < 0.3) {
-            let pColor = '#38bdf8';
-            if (this.type === 'full_heal') pColor = '#facc15';
-            else if (this.type === 'invincible') pColor = '#38bdf8';
-            else if (this.type === 'half_heal') pColor = '#4ade80';
-            else if (this.type === 'enemy_spawner') pColor = '#a855f7';
-            else if (this.type === 'gourmet_spyzer') pColor = '#f97316';
+        this.group.rotation.y += 0.03;
+        this.ring.rotation.z += 0.04;
 
-            particles.push(new Particle(
-                this.x + (Math.random() - 0.5) * 20,
-                this.y + (Math.random() - 0.5) * 20,
-                pColor, 3, 0, -1, 15
-            ));
+        if (this.life <= 0) {
+            this.destroy();
+            return false;
         }
+        return true;
     }
-
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        const pulseScale = 1 + Math.sin(this.pulseAngle) * 0.08;
-        ctx.scale(pulseScale, pulseScale);
-
-        let auraColor = 'rgba(56, 189, 248, 0.4)';
-        if (this.type === 'full_heal') auraColor = 'rgba(250, 204, 21, 0.5)';
-        else if (this.type === 'invincible') auraColor = 'rgba(56, 189, 248, 0.5)';
-        else if (this.type === 'half_heal') auraColor = 'rgba(34, 197, 94, 0.5)';
-        else if (this.type === 'enemy_spawner') auraColor = 'rgba(168, 85, 247, 0.6)';
-        else if (this.type === 'gourmet_spyzer') auraColor = 'rgba(249, 115, 22, 0.6)';
-
-        ctx.fillStyle = auraColor;
-        ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, 18, 0, Math.PI * 2);
-        ctx.stroke();
-
-        if (this.type === 'full_heal') {
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            ctx.moveTo(0, 8);
-            ctx.bezierCurveTo(-12, -2, -12, -12, 0, -10);
-            ctx.bezierCurveTo(12, -12, 12, -2, 0, 8);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('全回復', 0, 15);
-        }
-        else if (this.type === 'invincible') {
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(0, 0, 10, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * 10, -Math.sin((18 + i * 72) * Math.PI / 180) * 10);
-                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * 4, -Math.sin((54 + i * 72) * Math.PI / 180) * 4);
-            }
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('無敵', 0, 15);
-        }
-        else if (this.type === 'half_heal') {
-            ctx.fillStyle = '#22c55e';
-            ctx.beginPath();
-            ctx.arc(0, 2, 9, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(-3, -10, 6, 4);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('50%回復', 0, 15);
-        }
-        else if (this.type === 'enemy_spawner') {
-            ctx.fillStyle = '#a855f7';
-            ctx.beginPath();
-            ctx.arc(0, -2, 9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillRect(-5, 3, 10, 5);
-
-            ctx.fillStyle = '#0f172a';
-            ctx.beginPath();
-            ctx.arc(-3, -3, 2.5, 0, Math.PI * 2);
-            ctx.arc(3, -3, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 9px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('強襲10体', 0, 15);
-        }
-        else if (this.type === 'gourmet_spyzer') {
-            ctx.fillStyle = '#f97316';
-            ctx.beginPath();
-            ctx.fillRect(-6, -10, 12, 16);
-            ctx.fill();
-
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            ctx.arc(0, -10, 6, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 8px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('スパイザー', 0, 15);
-        }
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.group);
     }
 }
 
-// バーサーカーの投げ斧
-class AxeProjectile {
-    constructor(x, y, facing) {
-        this.x = x;
-        this.y = y;
-        this.speedX = facing === 'right' ? 14 : -14;
-        this.radius = 24;
-        this.angle = 0;
-        this.life = 65;
+// 3D 投擲斧 (バイキング用)
+class AxeProjectile3D {
+    constructor(pos, dir) {
+        this.pos = pos.clone();
+        this.pos.y = 1.5;
+        this.dir = dir.clone().normalize();
+        this.speed = 0.65;
+        this.life = 70;
         this.damage = 12;
         this.hitEnemies = new Set();
+
+        this.group = new THREE.Group();
+        this.group.position.copy(this.pos);
+
+        // 柄
+        const hiltGeo = new THREE.CylinderGeometry(0.1, 0.1, 2.2, 8);
+        const hiltMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+        const hilt = new THREE.Mesh(hiltGeo, hiltMat);
+        this.group.add(hilt);
+
+        // 両刃
+        const bladeGeo = new THREE.BoxGeometry(1.6, 0.8, 0.15);
+        const bladeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.8, roughness: 0.2 });
+        const blade = new THREE.Mesh(bladeGeo, bladeMat);
+        blade.position.y = 0.6;
+        this.group.add(blade);
+
+        scene.add(this.group);
     }
     update(enemies) {
-        this.x += this.speedX;
-        this.angle += 0.4;
+        this.pos.addScaledVector(this.dir, this.speed);
+        this.group.position.copy(this.pos);
+        this.group.rotation.z += 0.45;
         this.life--;
 
-        particles.push(new Particle(
-            this.x, this.y, '#ef4444', 5,
-            (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, 15
-        ));
-        particles.push(new Particle(
-            this.x, this.y, '#f59e0b', 3,
-            (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, 12
-        ));
-
-        enemies.forEach(enemy => {
-            if (!this.hitEnemies.has(enemy)) {
-                const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-                if (dist < this.radius + enemy.radius + 10) {
-                    enemy.hp -= this.damage;
-                    this.hitEnemies.add(enemy);
+        // 敵への衝突判定
+        enemies.forEach(e => {
+            if (!this.hitEnemies.has(e)) {
+                const dist = Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z);
+                if (dist < 2.5) {
+                    e.hp -= this.damage;
+                    this.hitEnemies.add(e);
                     playSound('hit');
-                    floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, `-${this.damage} 斧撃!`, '#ef4444'));
-
-                    for (let i = 0; i < 12; i++) {
-                        particles.push(new Particle(
-                            enemy.x, enemy.y, '#ef4444', 4,
-                            (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 20
-                        ));
-                    }
+                    addFloatingText(e.pos.x, e.pos.y, e.pos.z, `-${this.damage} 斧撃!`, '#ef4444');
+                    spawnParticleExplosion(this.pos, 0xef4444, 10, 0.4);
                 }
             }
         });
+
+        if (this.life <= 0) {
+            this.destroy();
+            return false;
+        }
+        return true;
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 4;
-        ctx.fillStyle = '#f59e0b';
-
-        ctx.beginPath();
-        ctx.moveTo(-20, 0);
-        ctx.lineTo(20, 0);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(12, 0, 16, -Math.PI / 3, Math.PI / 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(-12, 0, 16, Math.PI * 2/3, Math.PI * 4/3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.group);
     }
 }
 
-// ヒットテキスト
-class FloatingText {
-    constructor(x, y, text, color) {
-        this.x = x;
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.life = 40;
+// 3D 暗黒ビーム (ダークマージ用)
+class DarkBeam3D {
+    constructor(startPos, dir) {
+        this.mesh = new THREE.Group();
+        this.mesh.position.copy(startPos);
+        this.mesh.position.y = 1.6;
+
+        const length = 75;
+        const beamGeo = new THREE.CylinderGeometry(1.2, 1.2, length, 16);
+        beamGeo.translate(0, length / 2, 0);
+        beamGeo.rotateX(Math.PI / 2);
+        const beamMat = new THREE.MeshBasicMaterial({ color: 0xa855f7, transparent: true, opacity: 0.65 });
+        this.beamCore = new THREE.Mesh(beamGeo, beamMat);
+        this.mesh.add(this.beamCore);
+
+        // 向き
+        const angle = Math.atan2(dir.x, dir.z);
+        this.mesh.rotation.y = angle;
+
+        scene.add(this.mesh);
+        this.life = 45;
     }
     update() {
-        this.y -= 1;
         this.life--;
+        this.beamCore.scale.x = 1 + Math.sin(Date.now() * 0.05) * 0.2;
+        this.beamCore.scale.z = this.beamCore.scale.x;
+        if (this.life <= 0) {
+            scene.remove(this.mesh);
+            return false;
+        }
+        return true;
     }
-    draw(ctx) {
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, this.life / 40);
-        ctx.fillStyle = this.color;
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(this.text, this.x - 10, this.y);
-        ctx.restore();
+    destroy() {
+        scene.remove(this.mesh);
     }
 }
 
-let particles = [];
-let floatingTexts = [];
-let projectiles = [];
-let itemDrops = [];
-let itemSpawnTimer = 300;
-let screenShake = 0;
+// 3D 旋風リング (バランス剣士用)
+class SpinAura3D {
+    constructor(parentMesh) {
+        this.geo = new THREE.TorusGeometry(3.5, 0.25, 8, 24);
+        this.geo.rotateX(Math.PI / 2);
+        this.mat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 });
+        this.mesh = new THREE.Mesh(this.geo, this.mat);
+        this.mesh.position.y = 1.2;
+        parentMesh.add(this.mesh);
+    }
+    update() {
+        this.mesh.rotation.y += 0.35;
+    }
+    destroy(parentMesh) {
+        parentMesh.remove(this.mesh);
+    }
+}
 
-let killCount = 0;
-const REQUIRED_KILLS_FOR_ULTIMATE = 15;
-let ultimateFlashTimer = 0;
+// ==========================================
+// プレイヤークラス (3D)
+// ==========================================
+class Player3D {
+    constructor(charIndex) {
+        this.charIndex = charIndex;
+        this.config = CHARACTER_TYPES[charIndex];
+        this.pos = new THREE.Vector3(-18, 0, 0);
+        this.dir = new THREE.Vector3(1, 0, 0);
+        this.hp = this.config.maxHp;
+        this.maxHp = this.config.maxHp;
+        this.speed = this.config.speed;
 
-// ステージ障害物リスト
-let magmaZones = [];
-let pillarObstacles = [];
-let arrowTraps = [];
-let arrowProjectiles = [];
+        this.stickman = create3DStickman(this.config.color, charIndex, false);
+        this.stickman.root.position.copy(this.pos);
+        scene.add(this.stickman.root);
 
-class Player {
-    constructor(x, y, charIndex) {
-        this.x = x;
-        this.y = y;
-        this.charConfig = CHARACTER_TYPES[charIndex];
-        this.radius = 14;
-        this.speed = this.charConfig.speed;
-        this.hp = this.charConfig.maxHp;
-        this.maxHp = this.charConfig.maxHp;
-        this.color = this.charConfig.color;
-        this.facing = 'right';
+        this.specialCooldown = 0;
+        this.maxSpecialCooldown = this.config.skillCost;
+        this.isSpecialActive = false;
+        this.specialTimer = 0;
+        this.invincibleTimer = 0;
+
         this.isAttacking = false;
         this.attackTimer = 0;
         this.attackHasHit = false;
-        
-        this.specialCooldown = 0;
-        this.maxSpecialCooldown = this.charConfig.skillCost;
-        this.isSpecialActive = false;
-        this.specialTimer = 0;
-        this.specialAngle = 0;
-        this.invincibleTimer = 0;
-        
-        this.walkCycle = 0;
+
+        this.spinAura = null;
+        this.darkBeam = null;
     }
 
     update() {
-        if (this.invincibleTimer > 0) {
-            this.invincibleTimer--;
-            if (Math.random() < 0.4) {
-                particles.push(new Particle(
-                    this.x + (Math.random() - 0.5) * 30,
-                    this.y + (Math.random() - 0.5) * 30,
-                    '#38bdf8', 3, 0, -1, 15
-                ));
-            }
-        }
+        if (this.invincibleTimer > 0) this.invincibleTimer--;
 
+        // 必殺技発動中タイマー
         if (this.isSpecialActive) {
             this.specialTimer--;
-            this.specialAngle += 0.4;
-            
-            if (this.charConfig.name === 'バランス剣士') {
-                for (let i = 0; i < 3; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = 30 + Math.random() * 50;
-                    particles.push(new Particle(
-                        this.x + Math.cos(angle) * dist,
-                        this.y + Math.sin(angle) * dist,
-                        this.color,
-                        4,
-                        (Math.random() - 0.5) * 3,
-                        (Math.random() - 0.5) * 3,
-                        20
-                    ));
-                }
-            }
-            else if (this.charConfig.name === '聖騎士ガーディアン') {
-                for (let i = 0; i < 4; i++) {
-                    particles.push(new Particle(
-                        this.x + (Math.random() - 0.5) * 40,
-                        this.y + (Math.random() - 0.5) * 40,
-                        '#4ade80',
-                        4,
-                        0,
-                        -2 - Math.random() * 2,
-                        25
-                    ));
-                }
-            }
-            else if (this.charConfig.name === '大魔導士ダークマージ') {
-                const dir = this.facing === 'right' ? 1 : -1;
-                const beamY = this.y - 10;
-                
-                for (let i = 0; i < 6; i++) {
-                    const bx = this.x + dir * (Math.random() * canvas.width);
-                    const by = beamY + (Math.random() - 0.5) * 50;
-                    particles.push(new Particle(
-                        bx, by, '#c084fc', 4,
-                        dir * (5 + Math.random() * 5),
-                        (Math.random() - 0.5) * 2,
-                        15
-                    ));
-                }
+            if (this.spinAura) this.spinAura.update();
 
-                enemies.forEach(enemy => {
-                    const inRange = dir === 1 ? enemy.x >= this.x : enemy.x <= this.x;
-                    if (inRange && Math.abs(enemy.y - beamY) < 45) {
-                        enemy.hp -= 0.6;
-                        enemy.x += dir * 1.5;
-                        particles.push(new Particle(
-                            enemy.x, enemy.y, '#a855f7', 4,
-                            (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
-                        ));
+            // ダークマージのビームダメージ判定
+            if (this.config.name === '大魔導士ダークマージ' && this.darkBeam) {
+                enemies.forEach(e => {
+                    const toEnemy = e.pos.clone().sub(this.pos);
+                    const forward = this.dir.clone();
+                    const dot = toEnemy.dot(forward);
+                    if (dot > 0 && dot < 70) {
+                        const perpDist = toEnemy.clone().sub(forward.multiplyScalar(dot)).length();
+                        if (perpDist < 2.5) {
+                            e.hp -= 0.6;
+                            e.pos.addScaledVector(this.dir, 0.15);
+                            spawnParticleExplosion(e.pos, 0xa855f7, 2, 0.2);
+                        }
+                    }
+                });
+            }
+
+            // バランス剣士の範囲ダメージ
+            if (this.config.name === 'バランス剣士') {
+                enemies.forEach(e => {
+                    const dist = Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z);
+                    if (dist < 4.5) {
+                        e.hp -= 0.45;
+                        spawnParticleExplosion(e.pos, 0x38bdf8, 2, 0.2);
                     }
                 });
             }
 
             if (this.specialTimer <= 0) {
                 this.isSpecialActive = false;
+                if (this.spinAura) {
+                    this.spinAura.destroy(this.stickman.root);
+                    this.spinAura = null;
+                }
+                if (this.darkBeam) {
+                    this.darkBeam.destroy();
+                    this.darkBeam = null;
+                }
             }
-            return;
         }
 
-        if (this.specialCooldown > 0) {
-            this.specialCooldown--;
-        }
+        if (this.specialCooldown > 0) this.specialCooldown--;
 
-        let dx = 0;
-        let dy = 0;
+        // 移動処理
+        let moveX = 0;
+        let moveZ = 0;
+        if (keys.ArrowUp) moveZ -= 1;
+        if (keys.ArrowDown) moveZ += 1;
+        if (keys.ArrowLeft) moveX -= 1;
+        if (keys.ArrowRight) moveX += 1;
 
-        if (keys.ArrowUp) dy -= this.speed;
-        if (keys.ArrowDown) dy += this.speed;
-        if (keys.ArrowLeft) {
-            dx -= this.speed;
-            this.facing = 'left';
-        }
-        if (keys.ArrowRight) {
-            dx += this.speed;
-            this.facing = 'right';
-        }
+        if (moveX !== 0 || moveZ !== 0) {
+            const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
+            this.pos.addScaledVector(moveVec, this.speed);
 
-        if (dx !== 0 || dy !== 0) {
-            this.walkCycle += 0.2;
+            // 向きをスムーズに合わせる
+            const targetAngle = Math.atan2(moveVec.x, moveVec.z);
+            this.stickman.root.rotation.y = targetAngle;
+            this.dir.copy(moveVec);
+
+            // 歩行アニメーション
+            this.stickman.walkCycle += 0.22;
+            const swing = Math.sin(this.stickman.walkCycle) * 0.65;
+            this.stickman.hipL.rotation.x = swing;
+            this.stickman.hipR.rotation.x = -swing;
+            this.stickman.shoulderL.rotation.x = -swing * 0.7;
+            this.stickman.shoulderR.rotation.x = swing * 0.7;
         } else {
-            this.walkCycle = 0;
+            this.stickman.hipL.rotation.x *= 0.8;
+            this.stickman.hipR.rotation.x *= 0.8;
+            this.stickman.shoulderL.rotation.x *= 0.8;
+            this.stickman.shoulderR.rotation.x *= 0.8;
         }
 
-        this.x += dx;
-        this.y += dy;
+        // ステージ壁制限
+        const padX = arenaWidth / 2 - 2.0;
+        const padZ = arenaDepth / 2 - 2.0;
+        this.pos.x = THREE.MathUtils.clamp(this.pos.x, -padX, padX);
+        this.pos.z = THREE.MathUtils.clamp(this.pos.z, -padZ, padZ);
+        this.stickman.root.position.copy(this.pos);
 
-        if (this.x < 30) this.x = 30;
-        if (this.x > canvas.width - 30) this.x = canvas.width - 30;
-        if (this.y < 60) this.y = 60;
-        if (this.y > canvas.height - 30) this.y = canvas.height - 30;
+        // リボン・マフラーの揺れ
+        if (this.stickman.ribbonParts.length > 0) {
+            const wave = Math.sin(Date.now() * 0.01) * 0.2;
+            this.stickman.ribbonParts.forEach(r => r.rotation.y = wave);
+        }
 
+        // 通常攻撃
         if (keys.Space && !this.isAttacking) {
             this.isAttacking = true;
-            this.attackTimer = 15;
+            this.attackTimer = 14;
             this.attackHasHit = false;
             playSound('punch');
         }
 
         if (this.isAttacking) {
             this.attackTimer--;
-            if (this.attackTimer <= 0) {
-                this.isAttacking = false;
+            this.stickman.shoulderR.rotation.x = -Math.PI / 2; // 突き出し
+            if (!this.attackHasHit) {
+                const punchPos = this.pos.clone().addScaledVector(this.dir, 2.0);
+                enemies.forEach(e => {
+                    const dist = Math.hypot(e.pos.x - punchPos.x, e.pos.z - punchPos.z);
+                    if (dist < 2.5) {
+                        const dmg = this.config.name === 'バイキング重戦士' ? 4 : 2;
+                        e.hp -= dmg;
+                        playSound('hit');
+                        addFloatingText(e.pos.x, e.pos.y, e.pos.z, `-${dmg}`, '#facc15');
+                        spawnParticleExplosion(punchPos, 0xfacc15, 6, 0.4);
+                        this.attackHasHit = true;
+                    }
+                });
             }
+            if (this.attackTimer <= 0) this.isAttacking = false;
         }
 
+        // 必殺技キー発動
         if (keys.KeyQ && this.specialCooldown === 0) {
             this.triggerSpecial();
         }
@@ -1120,582 +1424,363 @@ class Player {
 
     triggerSpecial() {
         if (this.specialCooldown > 0 || this.isSpecialActive) return;
-        
         this.specialCooldown = this.maxSpecialCooldown;
-        screenShake = 10;
+        screenShake = 12;
         playSound('special');
 
-        if (this.charConfig.name === 'バイキング重戦士') {
-            projectiles.push(new AxeProjectile(this.x, this.y, this.facing));
-            floatingTexts.push(new FloatingText(this.x, this.y - 40, '斧投げ撃破!!', '#ef4444'));
-        } 
-        else if (this.charConfig.name === '疾風影忍者') {
-            const startX = this.x;
-            const startY = this.y;
-            const targetX = this.facing === 'right' ? canvas.width - 50 : 50;
-
+        if (this.config.name === 'バイキング重戦士') {
+            projectiles.push(new AxeProjectile3D(this.pos, this.dir));
+            addFloatingText(this.pos.x, this.pos.y, this.pos.z, '斧投げ撃破!!', '#ef4444');
+        }
+        else if (this.config.name === '疾風影忍者') {
+            // 反対側へ瞬身ダッシュ移動
+            const targetX = this.dir.x >= 0 ? (arenaWidth / 2 - 3.5) : (-arenaWidth / 2 + 3.5);
+            const startX = this.pos.x;
             const minX = Math.min(startX, targetX);
             const maxX = Math.max(startX, targetX);
-            enemies.forEach(enemy => {
-                if (enemy.x >= minX - 30 && enemy.x <= maxX + 30 && Math.abs(enemy.y - startY) < 70) {
-                    enemy.hp -= 12;
-                    floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, '-12 瞬身一閃!', '#facc15'));
-                    for (let i = 0; i < 10; i++) {
-                        particles.push(new Particle(
-                            enemy.x, enemy.y, '#facc15', 4,
-                            (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 20
-                        ));
-                    }
+
+            // 通り道の敵を一網打尽
+            enemies.forEach(e => {
+                if (e.pos.x >= minX - 2.0 && e.pos.x <= maxX + 2.0 && Math.abs(e.pos.z - this.pos.z) < 4.0) {
+                    e.hp -= 12;
+                    addFloatingText(e.pos.x, e.pos.y, e.pos.z, '-12 瞬身一閃!', '#facc15');
+                    spawnParticleExplosion(e.pos, 0xfacc15, 10, 0.5);
                 }
             });
 
-            const steps = 30;
-            for (let i = 0; i < steps; i++) {
-                const px = startX + (targetX - startX) * (i / steps);
-                particles.push(new Particle(
-                    px, startY + (Math.random() - 0.5) * 20, '#facc15', 5,
-                    (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, 25
-                ));
+            // 電光残像ライン
+            for (let x = minX; x <= maxX; x += 1.5) {
+                particles3D.push(new Particle3D(new THREE.Vector3(x, 1.2, this.pos.z), 0xfacc15, 0.35, new THREE.Vector3(0, 0, 0), 25));
             }
 
-            this.x = targetX;
-            this.facing = this.facing === 'right' ? 'left' : 'right';
-            floatingTexts.push(new FloatingText(targetX, startY - 40, '瞬身一閃!!', '#facc15'));
-        } 
-        else if (this.charConfig.name === '聖騎士ガーディアン') {
+            this.pos.x = targetX;
+            this.stickman.root.position.copy(this.pos);
+            this.dir.x *= -1; // 向き反転
+            this.stickman.root.rotation.y = Math.atan2(this.dir.x, this.dir.z);
+            addFloatingText(this.pos.x, this.pos.y, this.pos.z, '瞬身一閃!!', '#facc15');
+        }
+        else if (this.config.name === '聖騎士ガーディアン') {
             this.isSpecialActive = true;
             this.specialTimer = 40;
-            this.specialAngle = 0;
             this.hp = Math.min(this.maxHp, this.hp + 8);
-            floatingTexts.push(new FloatingText(this.x, this.y - 40, '✨ HP+8 聖なる祈り(回復) ✨', '#22c55e'));
+            addFloatingText(this.pos.x, this.pos.y, this.pos.z, '✨ HP+8 聖なる祈り(回復) ✨', '#22c55e');
+            spawnParticleExplosion(this.pos, 0x22c55e, 18, 0.5);
         }
-        else if (this.charConfig.name === '大魔導士ダークマージ') {
+        else if (this.config.name === '大魔導士ダークマージ') {
             this.isSpecialActive = true;
             this.specialTimer = 45;
-            this.specialAngle = 0;
-            screenShake = 16;
-            floatingTexts.push(new FloatingText(this.x, this.y - 40, '⚡ 暗黒極大ビーム!! ⚡', '#a855f7'));
+            this.darkBeam = new DarkBeam3D(this.pos, this.dir);
+            addFloatingText(this.pos.x, this.pos.y, this.pos.z, '⚡ 暗黒極大ビーム!! ⚡', '#a855f7');
         }
         else {
+            // バランス剣士
             this.isSpecialActive = true;
             this.specialTimer = 45;
-            this.specialAngle = 0;
-            floatingTexts.push(new FloatingText(this.x, this.y - 40, `${this.charConfig.skillName}!!`, this.color));
+            this.spinAura = new SpinAura3D(this.stickman.root);
+            addFloatingText(this.pos.x, this.pos.y, this.pos.z, '必殺旋風斬り!!', '#38bdf8');
         }
     }
 
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        const isLeft = this.facing === 'left';
-        const dir = isLeft ? -1 : 1;
-        const legAngle = Math.sin(this.walkCycle) * 0.5;
-        const charName = this.charConfig.name;
-
-        if (this.invincibleTimer > 0) {
-            ctx.strokeStyle = `hsl(${(Date.now() / 5) % 360}, 100%, 65%)`;
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.arc(0, 0, 35, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(`無敵 ${(this.invincibleTimer / 60).toFixed(1)}s`, -18, -48);
-        }
-
-        if (this.isSpecialActive && charName === '大魔導士ダークマージ') {
-            const beamLength = canvas.width;
-            ctx.save();
-            ctx.shadowColor = '#a855f7';
-            ctx.shadowBlur = 25;
-            ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
-            ctx.fillRect(0, -25, dir * beamLength, 50);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.fillRect(0, -10, dir * beamLength, 20);
-            ctx.restore();
-        }
-
-        if (this.isSpecialActive && charName !== '大魔導士ダークマージ') {
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(0, 0, 75, this.specialAngle, this.specialAngle + Math.PI * 1.5);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(0, 0, 55, -this.specialAngle, -this.specialAngle + Math.PI);
-            ctx.stroke();
-        }
-
-        // キャラクター別スキン
-        if (charName === 'バランス剣士') {
-            ctx.strokeStyle = '#cbd5e1';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-dir * 4, 2);
-            ctx.lineTo(dir * 18, -32);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-dir * 6, -26);
-            ctx.lineTo(-dir * 22, -30 + Math.sin(Date.now() * 0.01) * 3);
-            ctx.moveTo(-dir * 6, -24);
-            ctx.lineTo(-dir * 20, -18 + Math.cos(Date.now() * 0.01) * 3);
-            ctx.stroke();
-        }
-        else if (charName === 'バイキング重戦士') {
-            ctx.fillStyle = '#ef4444';
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(-6, -32);
-            ctx.lineTo(-14, -42);
-            ctx.lineTo(-3, -34);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(6, -32);
-            ctx.lineTo(14, -42);
-            ctx.lineTo(3, -34);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(-6, -12, 12, 12);
-        }
-        else if (charName === '疾風影忍者') {
-            ctx.fillStyle = '#facc15';
-            ctx.fillRect(-8, -30, 16, 4);
-
-            ctx.strokeStyle = '#facc15';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(0, -16);
-            ctx.lineTo(-dir * 26, -14 + Math.sin(Date.now() * 0.015) * 5);
-            ctx.stroke();
-        }
-        else if (charName === '聖騎士ガーディアン') {
-            ctx.fillStyle = '#22c55e';
-            ctx.strokeStyle = '#4ade80';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(-dir * 12, -4, 13, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.strokeStyle = '#facc15';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(-dir * 12 - 5, -4);
-            ctx.lineTo(-dir * 12 + 5, -4);
-            ctx.moveTo(-dir * 12, -9);
-            ctx.lineTo(-dir * 12, 1);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#facc15';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(dir * 2, -28);
-            ctx.lineTo(dir * 8, -28);
-            ctx.moveTo(dir * 5, -31);
-            ctx.lineTo(dir * 5, -23);
-            ctx.stroke();
-        }
-        else if (charName === '大魔導士ダークマージ') {
-            ctx.fillStyle = '#a855f7';
-            ctx.strokeStyle = '#c084fc';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(-14, -28);
-            ctx.lineTo(14, -28);
-            ctx.lineTo(0, -52);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.strokeStyle = '#e9d5ff';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-dir * 10, 15);
-            ctx.lineTo(-dir * 10, -32);
-            ctx.stroke();
-
-            ctx.fillStyle = '#c084fc';
-            ctx.beginPath();
-            ctx.arc(-dir * 10, -35, 6, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, -25, 10, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, -15);
-        ctx.lineTo(0, 10);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 10);
-        ctx.lineTo(Math.sin(legAngle) * 12, 28);
-        ctx.moveTo(0, 10);
-        ctx.lineTo(-Math.sin(legAngle) * 12, 28);
-        ctx.stroke();
-
-        if (this.isAttacking) {
-            ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.lineTo(dir * 25, -10);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#facc15';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(dir * 15, -10, 25, dir * -0.5, dir * 0.5);
-            ctx.stroke();
-        } else {
-            ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.lineTo(dir * 12, -2);
-            ctx.moveTo(0, -10);
-            ctx.lineTo(-dir * 10, 0);
-            ctx.stroke();
-        }
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.stickman.root);
     }
 }
 
-class Enemy {
-    constructor(x, y, isBoss = false) {
-        this.x = x;
-        this.y = y;
+// ==========================================
+// 敵キャラクタークラス (3D)
+// ==========================================
+class Enemy3D {
+    constructor(x, z, isBoss = false) {
         this.isBoss = isBoss;
         this.hp = isBoss ? 20 : 10;
         this.maxHp = this.hp;
-        this.speed = isBoss ? 1.8 : 2.2 + Math.random() * 0.8;
-        this.radius = isBoss ? 20 : 12;
-        this.color = isBoss ? '#ef4444' : '#f43f5e';
-        this.facing = 'left';
+        this.speed = isBoss ? 0.16 : 0.20 + Math.random() * 0.08;
         this.attackCooldown = 0;
+
+        this.pos = new THREE.Vector3(x, 0, z);
+        this.stickman = create3DStickman(isBoss ? 0xdc2626 : 0xf43f5e, -1, isBoss);
+        this.stickman.root.position.copy(this.pos);
+        scene.add(this.stickman.root);
+
+        // 頭上HPバースプライト
+        this.hpCanvas = document.createElement('canvas');
+        this.hpCanvas.width = 128;
+        this.hpCanvas.height = 24;
+        this.hpCtx = this.hpCanvas.getContext('2d');
+        this.hpTexture = new THREE.CanvasTexture(this.hpCanvas);
+
+        const spMat = new THREE.SpriteMaterial({ map: this.hpTexture, depthTest: false });
+        this.hpSprite = new THREE.Sprite(spMat);
+        this.hpSprite.scale.set(isBoss ? 4.5 : 3.0, isBoss ? 0.8 : 0.55, 1);
+        this.hpSprite.position.y = isBoss ? 4.8 : 3.2;
+        this.stickman.root.add(this.hpSprite);
+
+        this.updateHpBar();
+    }
+
+    updateHpBar() {
+        const ctx = this.hpCtx;
+        ctx.clearRect(0, 0, 128, 24);
+        // 背景
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 4, 128, 16);
+        // HPバー
+        const ratio = Math.max(0, this.hp / this.maxHp);
+        ctx.fillStyle = this.isBoss ? '#ef4444' : '#22c55e';
+        ctx.fillRect(2, 6, Math.floor(124 * ratio), 12);
+        this.hpTexture.needsUpdate = true;
     }
 
     update(player) {
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        const dist = Math.hypot(dx, dy);
+        const dx = player.pos.x - this.pos.x;
+        const dz = player.pos.z - this.pos.z;
+        const dist = Math.hypot(dx, dz);
 
-        if (dx > 0) this.facing = 'right';
-        else this.facing = 'left';
+        if (dist > 2.2) {
+            const moveVec = new THREE.Vector3(dx, 0, dz).normalize();
+            this.pos.addScaledVector(moveVec, this.speed);
+            this.stickman.root.position.copy(this.pos);
 
-        if (dist > 25) {
-            this.x += (dx / dist) * this.speed;
-            this.y += (dy / dist) * this.speed;
+            // 向き
+            this.stickman.root.rotation.y = Math.atan2(moveVec.x, moveVec.z);
+
+            // 歩行アニメ
+            this.stickman.walkCycle += 0.16;
+            const swing = Math.sin(this.stickman.walkCycle) * 0.6;
+            this.stickman.hipL.rotation.x = swing;
+            this.stickman.hipR.rotation.x = -swing;
         } else {
+            // 近接攻撃
             if (this.attackCooldown <= 0 && !player.isSpecialActive) {
                 if (player.invincibleTimer > 0) {
-                    this.attackCooldown = 40;
+                    this.attackCooldown = 35;
                     playSound('hit');
-                    floatingTexts.push(new FloatingText(player.x, player.y - 20, '無敵ガード!', '#38bdf8'));
-                    for (let i = 0; i < 4; i++) {
-                        particles.push(new Particle(
-                            player.x, player.y, '#38bdf8', 3,
-                            (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 12
-                        ));
-                    }
+                    addFloatingText(player.pos.x, player.pos.y, player.pos.z, '無敵ガード!', '#38bdf8');
                 } else {
                     player.hp -= this.isBoss ? 2 : 1;
-                    this.attackCooldown = 60;
+                    this.attackCooldown = 55;
                     screenShake = 6;
                     playSound('hit');
-                    floatingTexts.push(new FloatingText(player.x, player.y - 20, '-1', '#ef4444'));
-
-                    for (let i = 0; i < 5; i++) {
-                        particles.push(new Particle(
-                            player.x, player.y,
-                            '#ef4444', 3,
-                            (Math.random() - 0.5) * 4,
-                            (Math.random() - 0.5) * 4,
-                            15
-                        ));
-                    }
+                    addFloatingText(player.pos.x, player.pos.y, player.pos.z, '-1', '#ef4444');
+                    spawnParticleExplosion(player.pos, 0xef4444, 4, 0.3);
                 }
             }
         }
 
-        if (this.attackCooldown > 0) {
-            this.attackCooldown--;
-        }
+        if (this.attackCooldown > 0) this.attackCooldown--;
+
+        this.updateHpBar();
     }
 
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-
-        const dir = this.facing === 'left' ? -1 : 1;
-        const headRadius = this.isBoss ? 14 : 9;
-
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = this.isBoss ? 5 : 3;
-        ctx.lineCap = 'round';
-
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(0, -headRadius * 2, headRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(0, -headRadius);
-        ctx.lineTo(0, headRadius * 1.5);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, headRadius * 1.5);
-        ctx.lineTo(dir * 10, headRadius * 3);
-        ctx.moveTo(0, headRadius * 1.5);
-        ctx.lineTo(-dir * 10, headRadius * 3);
-
-        ctx.moveTo(0, 0);
-        ctx.lineTo(dir * 14, headRadius);
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-dir * 10, headRadius);
-        ctx.stroke();
-
-        const barWidth = this.isBoss ? 44 : 26;
-        const barHeight = this.isBoss ? 6 : 4;
-        const barY = this.isBoss ? -45 : -26;
-
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(-barWidth / 2, barY, barWidth, barHeight);
-        ctx.fillStyle = this.isBoss ? '#ef4444' : '#22c55e';
-        ctx.fillRect(-barWidth / 2, barY, (Math.max(0, this.hp) / this.maxHp) * barWidth, barHeight);
-
-        ctx.restore();
+    destroy() {
+        scene.remove(this.stickman.root);
+        this.hpTexture.dispose();
     }
 }
 
+// ==========================================
+// ゲーム状態管理
+// ==========================================
+const MAX_WAVES = 23;
+let player = null;
+let enemies = [];
+let projectiles = [];
+let itemDrops = [];
+let itemSpawnTimer = 350;
+let magmaZones = [];
+let pillarObstacles = [];
+let arrowTraps = [];
+let arrowProjectiles = [];
+
+let currentWave = 1;
+let killCount = 0;
+const REQUIRED_KILLS_FOR_ULTIMATE = 15;
+let gameOver = false;
+let gameWon = false;
+let screenShake = 0;
+
+function spawnWave(wave) {
+    // 既存の敵や障害物をクリア
+    enemies.forEach(e => e.destroy());
+    enemies = [];
+    magmaZones.forEach(m => m.destroy());
+    magmaZones = [];
+    pillarObstacles.forEach(p => p.destroy());
+    pillarObstacles = [];
+    arrowTraps.forEach(t => t.destroy());
+    arrowTraps = [];
+    arrowProjectiles.forEach(a => a.destroy());
+    arrowProjectiles = [];
+
+    const totalEnemies = 4 + wave * 2;
+    for (let i = 0; i < totalEnemies; i++) {
+        const isBoss = (wave % 3 === 0 && i === 0) || (wave === MAX_WAVES && i < 3);
+        const ex = 8 + Math.random() * (arenaWidth / 2 - 12);
+        const ez = (Math.random() - 0.5) * (arenaDepth - 10);
+        enemies.push(new Enemy3D(ex, ez, isBoss));
+    }
+
+    // 障害物配置
+    magmaZones.push(new MagmaZone3D(-10, 8, 4.2));
+    magmaZones.push(new MagmaZone3D(12, -8, 4.2));
+
+    pillarObstacles.push(new PillarObstacle3D(-8, -6, 2.6));
+    pillarObstacles.push(new PillarObstacle3D(10, 7, 2.6));
+
+    arrowTraps.push(new ArrowTrap3D(-arenaWidth/2 + 2, 0, 1));
+    arrowTraps.push(new ArrowTrap3D(arenaWidth/2 - 2, 0, -1));
+}
+
+// 全画面瞬殺技 (Eキー)
 function triggerUltimateMove() {
     initAudio();
-    if (killCount < REQUIRED_KILLS_FOR_ULTIMATE) return;
+    if (killCount < REQUIRED_KILLS_FOR_ULTIMATE || gameOver || gameWon) return;
 
     killCount -= REQUIRED_KILLS_FOR_ULTIMATE;
     screenShake = 25;
-    ultimateFlashTimer = 18;
+    flashOverlay.style.opacity = '0.85';
+    setTimeout(() => { flashOverlay.style.opacity = '0'; }, 200);
+
     playSound('win');
     playSound('special');
+    addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 全画面瞬殺一閃!! 💥', '#ec4899');
 
-    floatingTexts.push(new FloatingText(canvas.width / 2, canvas.height / 2 - 40, '💥 全画面瞬殺一閃!! 💥', '#ec4899'));
-
-    enemies.forEach(enemy => {
-        enemy.hp = -999;
-        for (let i = 0; i < 20; i++) {
-            particles.push(new Particle(
-                enemy.x, enemy.y, '#ec4899', 5,
-                (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 12, 30
-            ));
-        }
+    // 全ての敵を爆散
+    enemies.forEach(e => {
+        e.hp = -999;
+        spawnParticleExplosion(e.pos, 0xec4899, 16, 0.7);
+        spawnParticleExplosion(e.pos, 0xfacc15, 8, 0.5);
     });
 }
 
 function spawnExtraEnemies(count = 10) {
     for (let i = 0; i < count; i++) {
-        const x = 60 + Math.random() * (canvas.width - 120);
-        const y = -30 - Math.random() * 150;
-        enemies.push(new Enemy(x, y, false));
+        const ex = (Math.random() - 0.5) * (arenaWidth - 10);
+        const ez = (Math.random() - 0.5) * (arenaDepth - 10);
+        enemies.push(new Enemy3D(ex, ez, false));
     }
 }
 
-// ゲーム状態管理
-const MAX_WAVES = 23;
-let player = new Player(150, 250, selectedCharIndex);
-let enemies = [];
-let currentWave = 1;
-let totalEnemiesInWave = 7;
-let gameOver = false;
-let gameWon = false;
+function restartGame() {
+    initAudio();
+    if (player) player.destroy();
+    itemDrops.forEach(it => it.destroy());
+    itemDrops = [];
+    projectiles.forEach(p => p.destroy());
+    projectiles = [];
 
-function spawnWave(wave) {
-    enemies = [];
-    totalEnemiesInWave = 4 + wave * 2;
-    for (let i = 0; i < totalEnemiesInWave; i++) {
-        const isBoss = (wave % 3 === 0 && i === 0) || (wave === MAX_WAVES && i < 3);
-        const x = 500 + Math.random() * 260;
-        const y = 80 + Math.random() * 380;
-        enemies.push(new Enemy(x, y, isBoss));
-    }
+    centerBanner.style.display = 'none';
+    currentWave = 1;
+    killCount = 0;
+    gameOver = false;
+    gameWon = false;
 
-    // ステージ障害物の生成 (マグマ、石柱、矢の発射台)
-    magmaZones = [
-        new MagmaZone(240, 360, 36),
-        new MagmaZone(560, 140, 36)
-    ];
-
-    pillarObstacles = [
-        new PillarObstacle(300, 200, 25),
-        new PillarObstacle(500, 320, 25)
-    ];
-
-    arrowTraps = [
-        new ArrowTrap(30, 250, false), // 右へ発射
-        new ArrowTrap(770, 250, true)   // 左へ発射
-    ];
-    arrowProjectiles = [];
+    player = new Player3D(selectedCharIndex);
+    spawnWave(currentWave);
 }
 
-spawnWave(currentWave);
-
+// ==========================================
+// メイン更新 & レンダリングループ
+// ==========================================
 function updateGame() {
     if (gameOver || gameWon) return;
 
     player.update();
 
-    if (screenShake > 0) screenShake--;
-    if (ultimateFlashTimer > 0) ultimateFlashTimer--;
-
-    // 障害物・トラップの更新
-    magmaZones.forEach(magma => magma.update(player));
-    pillarObstacles.forEach(pillar => pillar.update(player, enemies));
-    arrowTraps.forEach(trap => trap.update(arrowProjectiles));
-    arrowProjectiles.forEach((arrow, idx) => {
-        arrow.update(player, enemies);
-        if (arrow.life <= 0) arrowProjectiles.splice(idx, 1);
-    });
-
-    // アイテム定期生成
-    itemSpawnTimer--;
-    if (itemSpawnTimer <= 0) {
-        itemSpawnTimer = 400;
-        const types = ['full_heal', 'invincible', 'half_heal', 'enemy_spawner', 'gourmet_spyzer'];
-        const chosenType = types[Math.floor(Math.random() * types.length)];
-        const spawnX = 60 + Math.random() * (canvas.width - 120);
-        itemDrops.push(new ItemDrop(spawnX, chosenType));
+    // 画面シェイク
+    if (screenShake > 0) {
+        camera.position.x = (Math.random() - 0.5) * screenShake * 0.08;
+        camera.position.z = 36 + (Math.random() - 0.5) * screenShake * 0.08;
+        screenShake--;
+    } else {
+        camera.position.x = 0;
+        camera.position.z = 36;
     }
 
-    itemDrops.forEach((item, idx) => {
-        item.update();
+    // 障害物更新
+    magmaZones.forEach(m => m.update(player));
+    pillarObstacles.forEach(p => p.update(player, enemies));
+    arrowTraps.forEach(t => t.update(arrowProjectiles));
+    arrowProjectiles = arrowProjectiles.filter(a => a.update(player, enemies));
 
-        const dist = Math.hypot(item.x - player.x, item.y - player.y);
-        if (dist < item.radius + player.radius + 8) {
+    // アイテム降下・取得判定
+    itemSpawnTimer--;
+    if (itemSpawnTimer <= 0) {
+        itemSpawnTimer = 380;
+        const types = ['full_heal', 'invincible', 'half_heal', 'enemy_spawner', 'gourmet_spyzer'];
+        const chosen = types[Math.floor(Math.random() * types.length)];
+        const ix = (Math.random() - 0.5) * (arenaWidth - 16);
+        const iz = (Math.random() - 0.5) * (arenaDepth - 12);
+        itemDrops.push(new ItemDrop3D(ix, iz, chosen));
+    }
+
+    itemDrops = itemDrops.filter(item => {
+        const alive = item.update();
+        if (!alive) return false;
+
+        const dist = Math.hypot(item.group.position.x - player.pos.x, item.group.position.z - player.pos.z);
+        if (dist < 2.4 && item.group.position.y < 3.0) {
             if (item.type === 'full_heal') {
                 player.hp = player.maxHp;
                 playSound('win');
-                floatingTexts.push(new FloatingText(player.x, player.y - 30, '❤️ HP全回復!!', '#facc15'));
-            }
-            else if (item.type === 'invincible') {
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '❤️ HP全回復!!', '#facc15');
+            } else if (item.type === 'invincible') {
                 player.invincibleTimer = 300;
                 playSound('special');
-                floatingTexts.push(new FloatingText(player.x, player.y - 30, '✨ 5秒間無敵発動! ✨', '#38bdf8'));
-            }
-            else if (item.type === 'half_heal') {
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '✨ 5秒間無敵発動! ✨', '#38bdf8');
+            } else if (item.type === 'half_heal') {
                 player.hp = Math.min(player.maxHp, player.hp + Math.ceil(player.maxHp / 2));
                 playSound('win');
-                floatingTexts.push(new FloatingText(player.x, player.y - 30, '💚 HP50%回復!', '#22c55e'));
-            }
-            else if (item.type === 'enemy_spawner') {
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💚 HP50%回復!', '#22c55e');
+            } else if (item.type === 'enemy_spawner') {
                 spawnExtraEnemies(10);
                 screenShake = 14;
                 playSound('hit');
-                floatingTexts.push(new FloatingText(player.x, player.y - 30, '💀 呪い発動! 敵10体強襲!', '#ef4444'));
-            }
-            else if (item.type === 'gourmet_spyzer') {
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💀 呪い発動! 敵10体強襲!', '#ef4444');
+            } else if (item.type === 'gourmet_spyzer') {
                 player.specialCooldown = 0;
                 playSound('win');
                 playSound('special');
-                floatingTexts.push(new FloatingText(player.x, player.y - 30, '💥 グルメスパイザー! 必殺技リセット!', '#f97316'));
+                addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 グルメスパイザー! 必殺技リセット!', '#f97316');
             }
-
-            for (let i = 0; i < 15; i++) {
-                particles.push(new Particle(
-                    item.x, item.y, '#ffffff', 4,
-                    (Math.random() - 0.5) * 7, (Math.random() - 0.5) * 7, 20
-                ));
-            }
-
-            itemDrops.splice(idx, 1);
+            spawnParticleExplosion(item.group.position, 0xffffff, 14, 0.4);
+            item.destroy();
+            return false;
         }
-        else if (item.life <= 0) {
-            itemDrops.splice(idx, 1);
-        }
+        return true;
     });
 
-    projectiles.forEach((proj, idx) => {
-        proj.update(enemies);
-        if (proj.life <= 0) projectiles.splice(idx, 1);
-    });
+    // 投擲武器
+    projectiles = projectiles.filter(p => p.update(enemies));
 
-    if (player.isSpecialActive && player.charConfig.name === 'バランス剣士') {
-        enemies.forEach(enemy => {
-            const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
-            if (dist < 80) {
-                enemy.hp -= 0.4;
-                enemy.x += (enemy.x - player.x) * 0.1;
-                enemy.y += (enemy.y - player.y) * 0.1;
-                
-                particles.push(new Particle(
-                    enemy.x, enemy.y, player.color, 3,
-                    (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6, 12
-                ));
-            }
-        });
-    }
-
-    if (player.isAttacking && !player.attackHasHit) {
-        const attackX = player.x + (player.facing === 'right' ? 30 : -30);
-        enemies.forEach(enemy => {
-            const dist = Math.hypot(enemy.x - attackX, enemy.y - player.y);
-            if (dist < 40) {
-                const damage = player.charConfig.name === 'バイキング重戦士' ? 4 : 2;
-                enemy.hp -= damage;
-                enemy.x += (player.facing === 'right' ? 20 : -20);
-                playSound('hit');
-                floatingTexts.push(new FloatingText(enemy.x, enemy.y - 20, `-${damage}`, '#facc15'));
-                player.attackHasHit = true;
-
-                for (let i = 0; i < 6; i++) {
-                    particles.push(new Particle(
-                        enemy.x, enemy.y, '#facc15', 3,
-                        (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 15
-                    ));
-                }
-            }
-        });
-    }
-
-    enemies.forEach((enemy, index) => {
-        enemy.update(player);
-        if (enemy.hp <= 0) {
+    // 敵の更新・撃破
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.update(player);
+        if (e.hp <= 0) {
             killCount++;
-            for (let i = 0; i < 15; i++) {
-                particles.push(new Particle(
-                    enemy.x, enemy.y, enemy.color, 4,
-                    (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, 25
-                ));
-            }
-            enemies.splice(index, 1);
+            spawnParticleExplosion(e.pos, e.isBoss ? 0xef4444 : 0xf43f5e, 14, 0.45);
+            e.destroy();
+            enemies.splice(i, 1);
         }
-    });
+    }
 
+    // パーティクル更新
+    particles3D = particles3D.filter(p => p.update());
+
+    // 次のWaveチェック
     if (enemies.length === 0) {
         currentWave++;
         if (currentWave > MAX_WAVES) {
             gameWon = true;
             playSound('win');
+            bannerTitle.innerText = '🎉 VICTORY!! 🎉';
+            bannerTitle.style.color = '#facc15';
+            bannerDesc.innerText = '全23WAVE達成！最高の棒人間マスター！';
+            centerBanner.style.display = 'block';
         } else {
             playSound('win');
-            floatingTexts.push(new FloatingText(canvas.width / 2, canvas.height / 2, `WAVE ${currentWave} CLEAR!`, '#38bdf8'));
+            addFloatingText(0, 0, 0, `WAVE ${currentWave} CLEAR!`, '#38bdf8');
             spawnWave(currentWave);
         }
     }
@@ -1703,18 +1788,13 @@ function updateGame() {
     if (player.hp <= 0) {
         player.hp = 0;
         gameOver = true;
+        bannerTitle.innerText = 'GAME OVER';
+        bannerTitle.style.color = '#ef4444';
+        bannerDesc.innerText = '「リセット」ボタンで再挑戦できます';
+        centerBanner.style.display = 'block';
     }
 
-    particles.forEach((p, idx) => {
-        p.update();
-        if (p.life <= 0) particles.splice(idx, 1);
-    });
-
-    floatingTexts.forEach((ft, idx) => {
-        ft.update();
-        if (ft.life <= 0) floatingTexts.splice(idx, 1);
-    });
-
+    // UI更新
     hpText.innerText = Math.max(0, player.hp);
     maxHpText.innerText = player.maxHp;
     hpBar.style.width = `${(Math.max(0, player.hp) / player.maxHp) * 100}%`;
@@ -1725,7 +1805,7 @@ function updateGame() {
         specialDisplay.innerText = 'READY!';
         specialDisplay.style.color = '#4ade80';
         specialBtn.disabled = false;
-        specialBtn.innerText = `⚡ ${player.charConfig.skillName} (Q)`;
+        specialBtn.innerText = `⚡ ${player.config.skillName} (Q)`;
     } else {
         const sec = (player.specialCooldown / 60).toFixed(1);
         specialDisplay.innerText = `冷却中 (${sec}s)`;
@@ -1745,103 +1825,35 @@ function updateGame() {
         ultimateBtn.disabled = true;
         ultimateBtn.innerText = `💥 瞬殺 (${killCount}/${REQUIRED_KILLS_FOR_ULTIMATE})`;
     }
-}
 
-function drawGame() {
-    ctx.save();
+    // 3D浮遊テキストのスクリーン座標変換
+    floatingTexts = floatingTexts.filter(item => {
+        item.pos.y += 0.05;
+        item.life--;
+        const screenPos = item.pos.clone().project(camera);
+        const sx = (screenPos.x * 0.5 + 0.5) * 800;
+        const sy = (-(screenPos.y * 0.5) + 0.5) * 480;
+        item.el.style.left = `${sx}px`;
+        item.el.style.top = `${sy}px`;
+        item.el.style.opacity = Math.max(0, item.life / 40);
 
-    if (screenShake > 0) {
-        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 40) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += 40) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-    }
-
-    // 障害物の描画 (背景レイヤー)
-    magmaZones.forEach(magma => magma.draw(ctx));
-    pillarObstacles.forEach(pillar => pillar.draw(ctx));
-    arrowTraps.forEach(trap => trap.draw(ctx));
-    arrowProjectiles.forEach(arrow => arrow.draw(ctx));
-
-    player.draw(ctx);
-    projectiles.forEach(proj => proj.draw(ctx));
-    itemDrops.forEach(item => item.draw(ctx));
-    enemies.forEach(enemy => enemy.draw(ctx));
-    particles.forEach(p => p.draw(ctx));
-    floatingTexts.forEach(ft => ft.draw(ctx));
-
-    if (ultimateFlashTimer > 0) {
-        ctx.fillStyle = `rgba(244, 63, 94, ${ultimateFlashTimer / 18})`;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    if (gameOver) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = '#ef4444';
-        ctx.font = '800 48px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '20px sans-serif';
-        ctx.fillText('「リセット」ボタンで再挑戦できます', canvas.width / 2, canvas.height / 2 + 30);
-    } else if (gameWon) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = '#facc15';
-        ctx.font = '800 48px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🎉 VICTORY!! 全23WAVE達成! 🎉', canvas.width / 2, canvas.height / 2 - 20);
-
-        ctx.fillStyle = '#38bdf8';
-        ctx.font = '20px sans-serif';
-        ctx.fillText('お見事です！全キャラ制覇を目指しましょう！', canvas.width / 2, canvas.height / 2 + 30);
-    }
-
-    ctx.restore();
+        if (item.life <= 0) {
+            item.el.remove();
+            return false;
+        }
+        return true;
+    });
 }
 
 function gameLoop() {
     updateGame();
-    drawGame();
+    renderer.render(scene, camera);
     requestAnimationFrame(gameLoop);
 }
 
 function triggerSpecialMove() {
     initAudio();
-    player.triggerSpecial();
-}
-
-function restartGame() {
-    initAudio();
-    player = new Player(150, 250, selectedCharIndex);
-    currentWave = 1;
-    killCount = 0;
-    gameOver = false;
-    gameWon = false;
-    particles = [];
-    floatingTexts = [];
-    projectiles = [];
-    itemDrops = [];
-    itemSpawnTimer = 300;
-    spawnWave(currentWave);
+    if (player) player.triggerSpecial();
 }
 
 function copySourceCode() {
@@ -1849,14 +1861,12 @@ function copySourceCode() {
     navigator.clipboard.writeText(htmlCode).then(() => {
         const toast = document.getElementById('toast');
         toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2500);
-    }).catch(err => {
-        alert('コピーに失敗しました: ' + err);
-    });
+        setTimeout(() => toast.classList.remove('show'), 2500);
+    }).catch(err => alert('コピーに失敗しました: ' + err));
 }
 
+// ゲーム開始
+restartGame();
 gameLoop();
 </script>
 </body>
