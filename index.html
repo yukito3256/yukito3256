@@ -6,7 +6,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>3D棒人間アクションゲーム - 5キャラ＆全23Wave (Ver 3.0)</title>
+    <title>3D棒人間アクションゲーム - 5キャラ＆全23Wave (Ver 3.2 瞬殺除外版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
@@ -301,7 +301,7 @@
 </head>
 <body>
 
-    <h1>⚔️ 3D棒人間アクションゲーム - 5キャラ＆全23Wave ⚔️</h1>
+    <h1>⚔️ 3D棒人間アクションゲーム - 5キャラ＆全23Wave <span style="font-size: 13px; color: #ec4899; vertical-align: middle; border: 1px solid #ec4899; padding: 2px 6px; border-radius: 6px;">Ver 3.2 瞬殺除外版</span> ⚔️</h1>
 
     <!-- キャラクター選択UI -->
     <div id="char-select-container">
@@ -361,7 +361,7 @@
     </div>
 
     <div id="controls-guide">
-        🎮 <b>3D操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 3D移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 全画面瞬殺
+        🎮 <b>3D操作:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>/<kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> : 3D移動 | <kbd>Space</kbd> : 攻撃 | <kbd>Q</kbd> : 必殺技 | <kbd>E</kbd> : 全画面瞬殺 <span style="color:#ec4899;">(※瞬殺撃破は15体条件に加算されません)</span>
     </div>
 
     <div id="toast">コードをコピーしました！</div>
@@ -1593,21 +1593,23 @@ function triggerUltimateMove() {
     initAudio();
     if (killCount < REQUIRED_KILLS_FOR_ULTIMATE || gameOver || gameWon) return;
 
-    killCount -= REQUIRED_KILLS_FOR_ULTIMATE;
+    // 必殺技発動：キルカウントを0にリセット（瞬殺で倒した敵は条件の15人に一切含めない）
+    killCount = 0;
     screenShake = 25;
     flashOverlay.style.opacity = '0.85';
     setTimeout(() => { flashOverlay.style.opacity = '0'; }, 200);
 
     playSound('win');
     playSound('special');
-    addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 全画面瞬殺一閃!! 💥', '#ec4899');
+    addFloatingText(player.pos.x, player.pos.y, player.pos.z, '💥 全画面瞬殺一閃!! (撃破加算なし) 💥', '#ec4899');
 
+    // 全ての敵を爆散・即時破棄（敵撃破ループを通さずkillCount加算を完全にゼロにする）
     enemies.forEach(e => {
-        e.killedByUltimate = true;
-        e.hp = -999;
         spawnParticleExplosion(e.pos, 0xec4899, 16, 0.7);
         spawnParticleExplosion(e.pos, 0xfacc15, 8, 0.5);
+        e.destroy();
     });
+    enemies = [];
 }
 
 function spawnExtraEnemies(count = 10) {
